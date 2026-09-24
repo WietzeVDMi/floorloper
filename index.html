@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="nl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>
+<body>
+<title>Verdieping 3 in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  .altlink { font: 600 14px var(--body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  :root {
+    --paper: #eef0ec;
+    --sheet: #f8f9f6;
+    --ink: #1c2629;
+    --ink-2: #4c5a5e;
+    --ink-3: #8a9598;
+    --line: #d3d8d3;
+    --corridor: #e6e9e4;
+    --vrij: #2e8a57;
+    --vrij-bg: #d8efdf;
+    --optie: #b77b12;
+    --optie-bg: #f6e6c4;
+    --verhuurd: #7d888b;
+    --verhuurd-bg: #e3e6e4;
+    --gedeeld: #3f6aa1;
+    --gedeeld-bg: #dce5f2;
+    --algemeen: #4c5a5e;
+    --visitor: #d9502f;
+    --focus: #3f6aa1;
+    --hud: rgba(248, 249, 246, .92);
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
+      --line: #2e393c; --corridor: #182023;
+      --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
+      --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
+      --algemeen: #aab5b3; --visitor: #ff7a55; --focus: #86a9dc; --hud: rgba(28, 36, 39, .92);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
+    --line: #2e393c; --corridor: #182023;
+    --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
+    --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
+    --algemeen: #aab5b3; --visitor: #ff7a55; --focus: #86a9dc; --hud: rgba(28, 36, 39, .92);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 15px; line-height: 1.5;
+    padding-inline: 16px; padding-block: 20px 40px;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 4vw, 38px); line-height: 1.05; margin: 4px 0 0; text-wrap: balance; letter-spacing: -.01em; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-2); }
+  .summary b { font-family: var(--mono); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .stage { position: relative; height: clamp(420px, 72vh, 780px); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: #dfe6e8; touch-action: none; }
+  @media (max-width: 600px) { .stage { height: 64vh; min-height: 400px; } }
+  .stage canvas.gl { display: block; width: 100%; height: 100%; cursor: grab; }
+  .stage.walk canvas.gl { cursor: crosshair; }
+
+  .hud { position: absolute; background: var(--hud); border: 1px solid var(--line); border-radius: 8px; backdrop-filter: blur(6px); }
+  .modes { top: 12px; left: 12px; display: flex; padding: 3px; gap: 2px; }
+  .mode { font: 600 13px var(--body); border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+  .mode[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+  .where { top: 58px; left: 12px; padding: 6px 10px; font-size: 13px; color: var(--ink-2); max-width: calc(100% - 24px); }
+  .where b { color: var(--ink); font-weight: 600; }
+  .minimap { top: 12px; right: 12px; padding: 6px; }
+  .minimap canvas { display: block; width: 188px; height: 156px; cursor: pointer; }
+  @media (max-width: 600px) { .minimap canvas { width: 132px; height: 110px; } }
+  .hint { bottom: 12px; right: 12px; padding: 6px 10px; font-size: 12px; color: var(--ink-2); max-width: 340px; }
+  @media (max-width: 600px) { .hint { display: none; } }
+  .dpad { bottom: 12px; left: 12px; display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 44px); gap: 4px; padding: 6px; }
+  .dpad button { font: 600 18px var(--body); border: 1px solid var(--line); background: var(--sheet); color: var(--ink); border-radius: 6px; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .dpad button:active { background: var(--ink); color: var(--sheet); }
+  .dpad .up { grid-column: 2; grid-row: 1; }
+  .dpad .left { grid-column: 1; grid-row: 2; }
+  .dpad .down { grid-column: 2; grid-row: 2; }
+  .dpad .right { grid-column: 3; grid-row: 2; }
+  .tourbar { top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; white-space: nowrap; }
+  .tourbar .step { font: 500 12px var(--mono); color: var(--ink-2); }
+  @media (max-width: 700px) { .tourbar { top: auto; bottom: 120px; left: 12px; transform: none; } .tourbar .step { display: none; } }
+  .nogl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--ink-2); }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: 500 13px var(--body); color: var(--ink-2); background: var(--sheet); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .btn { font: 600 14px var(--body); border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--sheet); display: inline-flex; align-items: center; gap: 8px; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  button:focus-visible, .list-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 16px; height: 12px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+
+  aside { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+  @media (min-width: 981px) { aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); max-height: calc(100vh - 32px); overflow-y: auto; } }
+  aside h2 { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.15; margin: 0; text-wrap: balance; }
+  aside h3 { font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+  aside p { margin: 0; color: var(--ink-2); max-width: 60ch; }
+  .pill { font: 600 12px var(--body); border-radius: 999px; padding: 3px 10px; display: inline-flex; align-items: center; gap: 6px; width: fit-content; }
+  .pill.vrij { background: var(--vrij-bg); color: var(--vrij); }
+  .pill.optie { background: var(--optie-bg); color: var(--optie); }
+  .pill.verhuurd { background: var(--verhuurd-bg); color: var(--verhuurd); }
+  .pill.gedeeld { background: var(--gedeeld-bg); color: var(--gedeeld); }
+  .pill.algemeen { background: var(--corridor); color: var(--ink-2); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .stat { background: var(--sheet); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .stat .k { font-size: 12px; color: var(--ink-3); }
+  .stat .v { font: 500 17px var(--mono); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .list-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; width: 100%; }
+  .list-row:hover { background: var(--corridor); }
+  .list-row .c { font: 500 12px var(--mono); }
+  .list-row .n { font-weight: 600; font-size: 14px; }
+  .list-row .m { font-size: 12px; color: var(--ink-3); }
+  .list-row .p { font: 500 13px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .note { font-size: 12px; color: var(--ink-3); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Kantoorverdieping · 3e etage · Bruto ca. 1.650 m²</div>
+      <h1>Loop door de verdieping</h1>
+    </div>
+    <div class="summary" id="summary"></div>
+    <a class="altlink" href="plattegrond.html">Platte kaart (2D) →</a>
+  </header>
+
+  <div class="toolbar">
+    <div class="chips" role="group" aria-label="Filter op beschikbaarheid">
+      <button class="chip" data-filter="alle" aria-pressed="true">Alle ruimtes</button>
+      <button class="chip" data-filter="vrij" aria-pressed="false"><span class="dot" style="background:var(--vrij)"></span>Vrij</button>
+      <button class="chip" data-filter="optie" aria-pressed="false"><span class="dot" style="background:var(--optie)"></span>Onder optie</button>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="to-lift">Terug naar lift</button>
+      <button class="btn" id="tour-start">Start rondleiding</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="stage" id="stage" aria-label="3D-weergave van de verdieping">
+      <div class="hud modes" role="group" aria-label="Weergave">
+        <button class="mode" id="m-over" aria-pressed="true">Van boven</button>
+        <button class="mode" id="m-walk" aria-pressed="false">Rondlopen</button>
+      </div>
+      <div class="hud where" id="where"></div>
+      <div class="hud minimap"><canvas id="mini" width="376" height="312" aria-label="Minikaart, klik om erheen te lopen"></canvas></div>
+      <div class="hud tourbar" id="tourbar" hidden>
+        <span class="step" id="tour-step"></span>
+        <button class="btn ghost sm" id="tour-prev">←</button>
+        <button class="btn sm" id="tour-next">Volgende →</button>
+        <button class="btn ghost sm" id="tour-stop">Stop</button>
+      </div>
+      <div class="hud dpad" id="dpad" hidden>
+        <button class="up" data-key="fwd" aria-label="Vooruit">↑</button>
+        <button class="left" data-key="tl" aria-label="Draai links">↺</button>
+        <button class="down" data-key="back" aria-label="Achteruit">↓</button>
+        <button class="right" data-key="tr" aria-label="Draai rechts">↻</button>
+      </div>
+      <div class="hud hint" id="hint"></div>
+    </section>
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:#86c99c"></i>Vrij</span>
+    <span><i class="sw" style="background:#e8bd62"></i>Onder optie</span>
+    <span><i class="sw" style="background:#aab0ae"></i>Verhuurd</span>
+    <span><i class="sw" style="background:#93b1e0"></i>Gedeeld (voor alle huurders)</span>
+    <span><i class="dot" style="background:var(--visitor)"></i>U bent hier</span>
+  </div>
+  <p class="note">Beschikbaarheid, oppervlaktes en huurprijzen zijn voorbeeldgegevens. Het 3D-model is afgeleid van de plattegrond (vrije hoogte 3 m), huur is excl. btw en servicekosten.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const U = 0.05;                  // meter per tekeneenheid
+  const RENT = 17.5, SERVICE = 4.25;
+  const H = 880;
+  const WALL_H = 3, T = 2.4, DOOR = 32;
+
+  // ---------- Gegevens ----------
+  const north = [
+    { id: 'A1', name: 'Kantoortuin Noord', type: 'kantoor', x: 390, y: 60, w: 420, h: 120, door: [600, 180], node: 'n600', seats: 24, furn: 'desks', status: 'vrij', from: '1 nov 2026', text: 'Open werkvloer met daglicht aan twee zijden. Vier werkeilanden van zes plekken, direct aan de gang met pantry.' },
+    { id: 'A2', name: 'Directiekamer Noord', type: 'kantoor', x: 810, y: 60, w: 150, h: 120, door: [885, 180], node: 'n885', seats: 3, furn: 'exec', status: 'verhuurd', text: 'Afgesloten kamer met eigen toilet en zithoek. Verhuurd tot en met 2029.' },
+    { id: 'A3', name: 'Kantoor Noord', type: 'kantoor', x: 330, y: 220, w: 140, h: 80, door: [400, 220], node: 'n400', seats: 4, furn: 'small', status: 'vrij', from: 'direct', text: 'Compacte kamer naast de receptie en de liften. Geschikt voor een team van drie tot vier.' },
+    { id: 'A4', name: 'Projectruimte Noord', type: 'kantoor', x: 470, y: 220, w: 170, h: 100, door: [555, 220], node: 'n555', seats: 6, furn: 'round', status: 'optie', from: '1 dec 2026', text: 'Kamer met twee overlegtafels en uitzicht op de binnentuin. Er ligt een optie tot 15 oktober.' },
+    { id: 'PN', name: 'Pantry Noord', type: 'algemeen', x: 640, y: 220, w: 60, h: 100, door: [670, 220], node: 'n670', furn: 'pantry', text: 'Koffie, koelkast en vaatwasser. Voor alle huurders op deze vleugel.' },
+    { id: 'A5', name: 'Vergaderkamer Oost', type: 'gedeeld', x: 700, y: 220, w: 110, h: 100, door: [755, 220], node: 'n755', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht met scherm. Te reserveren via de receptie, inbegrepen in de servicekosten.' },
+    { id: 'A6', name: 'Flexkamer Noord', type: 'kantoor', x: 810, y: 220, w: 90, h: 100, door: [855, 220], node: 'n855', seats: 2, furn: 'duo', status: 'vrij', from: 'direct', text: 'Kleine kamer voor twee personen, ook te huren als belkamer of opslag.' },
+    { id: 'TNO', name: 'Trappenhuis Noord-Oost', type: 'algemeen', x: 900, y: 220, w: 60, h: 100, door: [930, 220], node: 'n930', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
+    { id: 'TNW', name: 'Trappenhuis Noord-West', type: 'algemeen', x: 40, y: 60, w: 60, h: 120, door: [70, 180], node: 'n70', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
+    { id: 'WN', name: 'Toiletten Noord', type: 'algemeen', x: 100, y: 60, w: 140, h: 120, door: [170, 180], node: 'n170', furn: 'wc', text: 'Dames, heren en een mindervalidentoilet.' },
+    { id: 'VN', name: 'Vergaderkamer Noord', type: 'gedeeld', x: 240, y: 60, w: 150, h: 120, door: [315, 180], node: 'n315', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht bij de receptie. Te reserveren via de receptie.' },
+    { id: 'BN', name: 'Boardroom Noord', type: 'gedeeld', x: 40, y: 220, w: 200, h: 210, door: [240, 325], node: 'h325', seats: 16, furn: 'u', text: 'Grote zaal met U-opstelling voor zestien personen. Kan worden gekoppeld aan Boardroom Zuid.' },
+  ];
+  const southOverride = {
+    A1: { id: 'B1', name: 'Kantoortuin Zuid', status: 'vrij', from: '1 jan 2027', text: 'Open werkvloer op het zuiden met vier werkeilanden van zes plekken. De huidige huurder vertrekt eind 2026.' },
+    A2: { id: 'B2', name: 'Directiekamer Zuid', status: 'vrij', from: 'direct', text: 'Afgesloten kamer met eigen toilet en zithoek, grenzend aan de kantoortuin.' },
+    A3: { id: 'B3', name: 'Kantoor Zuid', status: 'verhuurd', text: 'Compacte kamer naast de receptie. Verhuurd tot en met 2027.' },
+    A4: { id: 'B4', name: 'Projectruimte Zuid', status: 'vrij', from: 'direct', text: 'Kamer met twee overlegtafels en uitzicht op de binnentuin.' },
+    PN: { id: 'PZ', name: 'Pantry Zuid' },
+    A5: { id: 'B5', name: 'Vergaderkamer Zuid-Oost' },
+    A6: { id: 'B6', name: 'Flexkamer Zuid', status: 'optie', from: '1 nov 2026', text: 'Kleine kamer voor twee personen. Er ligt een optie tot 1 oktober.' },
+    TNO: { id: 'TZO', name: 'Trappenhuis Zuid-Oost' },
+    TNW: { id: 'TZW', name: 'Trappenhuis Zuid-West' },
+    WN: { id: 'WZ', name: 'Toiletten Zuid' },
+    VN: { id: 'VZ', name: 'Vergaderkamer Zuid' },
+    BN: { id: 'BZ', name: 'Boardroom Zuid' },
+  };
+  const mirrorNode = n => n === 'h325' ? 'h555' : n.replace(/^n/, 's');
+  const south = north.map(r => Object.assign({}, r, {
+    y: H - r.y - r.h, door: [r.door[0], H - r.door[1]], node: mirrorNode(r.node), south: true,
+  }, southOverride[r.id]));
+  const rooms = north.concat(south).map(r => Object.assign(r, {
+    status: r.type === 'kantoor' ? r.status : r.type,
+    m2: Math.round(r.w * r.h * U * U), cx: r.x + r.w / 2, cy: r.y + r.h / 2,
+  }));
+  const byId = Object.fromEntries(rooms.map(r => [r.id, r]));
+  const rentable = rooms.filter(r => r.type === 'kantoor');
+  const available = rentable.filter(r => r.status === 'vrij' || r.status === 'optie');
+
+  // Looproutes
+  const nodes = { lift: [400, 440], hall: [285, 440], h325: [285, 325], h555: [285, 555] };
+  const chainX = [70, 170, 285, 315, 400, 555, 600, 670, 755, 855, 885, 930];
+  chainX.forEach(x => { nodes['n' + x] = [x, 200]; nodes['s' + x] = [x, 680]; });
+  const adj = {};
+  const link = (a, b) => { (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); };
+  for (let i = 1; i < chainX.length; i++) { link('n' + chainX[i - 1], 'n' + chainX[i]); link('s' + chainX[i - 1], 's' + chainX[i]); }
+  link('n285', 'h325'); link('h325', 'hall'); link('hall', 'h555'); link('h555', 's285'); link('hall', 'lift');
+  function route(from, to) {
+    const prev = { [from]: null }, q = [from];
+    while (q.length) { const c = q.shift(); if (c === to) break; for (const n of adj[c] || []) if (!(n in prev)) { prev[n] = c; q.push(n); } }
+    const path = []; let c = to; while (c) { path.unshift(c); c = prev[c]; } return path;
+  }
+  const plen = pts => { let l = 0; for (let i = 1; i < pts.length; i++) l += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return l; };
+  function distanceFromLift(r) { const pts = [nodes.lift]; route('lift', r.node).forEach(n => pts.push(nodes[n])); pts.push(r.door); return Math.round(plen(pts) * U); }
+
+  function roomAt(px, py) { return rooms.find(r => px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) || null; }
+  function placeName(px, py) {
+    const r = roomAt(px, py);
+    if (r) return (r.type === 'algemeen' ? '' : r.id + ' · ') + r.name;
+    if (px > 330 && px < 470 && py > 300 && py < 580) return 'Liftlobby';
+    if (px >= 240 && px <= 330 && py > 220 && py < 660) return 'Hal en receptie';
+    return py < 440 ? 'Gang Noord' : 'Gang Zuid';
+  }
+
+  // ---------- Paneel, filter, shortlist ----------
+  const panel = document.getElementById('panel');
+  const eur = n => '€ ' + Math.round(n).toLocaleString('nl-NL');
+  const statusLabel = s => ({ vrij: 'Vrij', optie: 'Onder optie', verhuurd: 'Verhuurd', gedeeld: 'Gedeeld', algemeen: 'Algemene ruimte' }[s]);
+  let shortlist = [];
+  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist') || '[]').filter(id => byId[id]); } catch (e) { shortlist = []; }
+  const saveShortlist = () => { try { localStorage.setItem('plattegrond-shortlist', JSON.stringify(shortlist)); } catch (e) {} };
+
+  (function renderSummary() {
+    const vrij = rentable.filter(r => r.status === 'vrij');
+    document.getElementById('summary').innerHTML =
+      `<span><b>${vrij.length}</b> van ${rentable.length} kantoorruimtes vrij</span>` +
+      `<span><b>${vrij.reduce((s, r) => s + r.m2, 0)} m²</b> beschikbaar</span>` +
+      `<span><b>${vrij.reduce((s, r) => s + r.seats, 0)}</b> werkplekken</span>`;
+  })();
+
+  function listRow(r) {
+    return `<button class="list-row" data-go="${r.id}">
+      <span class="c" style="color:var(--${r.status})">${r.id}</span>
+      <span><span class="n">${r.name}</span><br><span class="m">${r.m2} m² · ${r.seats} plekken · ${r.status === 'optie' ? 'onder optie' : 'vrij ' + (r.from === 'direct' ? 'direct' : 'per ' + r.from)}</span></span>
+      <span class="p">${eur(r.m2 * RENT)}<br><span class="m">p/mnd</span></span>
+    </button>`;
+  }
+  function renderOverview() {
+    const sl = shortlist.map(id => byId[id]);
+    panel.innerHTML = `
+      <div class="eyebrow">U staat bij de liften</div>
+      <h2>Welke ruimte wilt u bekijken?</h2>
+      <p>Klik op een vloer in het model of op een regel hieronder en u loopt erheen. Met Rondlopen kijkt u rond op ooghoogte.</p>
+      <h3>Beschikbaar (${available.length})</h3>
+      <div class="list">${available.map(listRow).join('')}</div>
+      ${sl.length ? `<h3>Mijn shortlist (${sl.length})</h3><div class="list">${sl.map(listRow).join('')}</div>
+        <p class="note">Samen ${sl.reduce((s, r) => s + r.m2, 0)} m², ${sl.reduce((s, r) => s + r.seats, 0)} werkplekken, ${eur(sl.reduce((s, r) => s + r.m2, 0) * RENT)} huur per maand.</p>` : ''}`;
+    panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.go)));
+  }
+  let shownRoom = null;
+  function renderRoom(r) {
+    shownRoom = r ? r.id : null;
+    if (!r) return renderOverview();
+    const isRent = r.type === 'kantoor', onList = shortlist.includes(r.id);
+    const eyebrow = tour.active ? `Rondleiding · stop ${tour.i + 1} van ${tour.list.length}` : `${r.type === 'algemeen' ? 'Algemene ruimte' : r.id} · ${r.south ? 'zuidvleugel' : 'noordvleugel'}`;
+    let stats = '';
+    if (isRent) stats = `<div class="stats">
+        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+        <div class="stat"><span class="k">Werkplekken</span><span class="v">${r.seats}</span></div>
+        <div class="stat"><span class="k">Huur per maand</span><span class="v">${eur(r.m2 * RENT)}</span></div>
+        <div class="stat"><span class="k">Servicekosten</span><span class="v">${eur(r.m2 * SERVICE)}</span></div>
+        <div class="stat"><span class="k">Beschikbaar</span><span class="v">${r.status === 'verhuurd' ? '—' : (r.from === 'direct' ? 'Direct' : r.from)}</span></div>
+        <div class="stat"><span class="k">Lopen vanaf lift</span><span class="v">${distanceFromLift(r)} m</span></div></div>`;
+    else if (r.seats) stats = `<div class="stats">
+        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+        <div class="stat"><span class="k">Personen</span><span class="v">${r.seats}</span></div></div>`;
+    panel.innerHTML = `
+      <div class="eyebrow">${eyebrow}</div>
+      <h2>${r.name}</h2>
+      <span class="pill ${r.status}"><span class="dot" style="background:currentColor"></span>${statusLabel(r.status)}</span>
+      ${stats}
+      <p>${r.text}</p>
+      <div class="actions">
+        ${mode === 'over' ? `<button class="btn ghost" id="look">Kijk rond op ooghoogte</button>` : ''}
+        ${isRent && r.status !== 'verhuurd' ? `<button class="btn${onList ? ' ghost' : ''}" id="toggle-list">${onList ? 'Van shortlist halen' : 'Op mijn shortlist'}</button>` : ''}
+        <button class="btn ghost" id="back">Terug naar lift</button>
+      </div>`;
+    const tl = document.getElementById('toggle-list');
+    if (tl) tl.addEventListener('click', () => { shortlist = onList ? shortlist.filter(x => x !== r.id) : shortlist.concat(r.id); saveShortlist(); renderRoom(r); });
+    const lk = document.getElementById('look');
+    if (lk) lk.addEventListener('click', () => setMode('walk'));
+    document.getElementById('back').addEventListener('click', () => { endTour(); goLift(); });
+  }
+
+  // ---------- 3D ----------
+  const stage = document.getElementById('stage');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+  } catch (e) {
+    stage.insertAdjacentHTML('beforeend', '<div class="nogl">Uw browser kan de 3D-weergave niet tonen. Probeer een recente versie van Chrome, Safari of Firefox.</div>');
+    renderOverview();
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.domElement.className = 'gl';
+  stage.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xdfe6e8);
+  scene.fog = new THREE.Fog(0xdfe6e8, 70, 160);
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 400);
+  camera.rotation.order = 'YXZ';
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa49f, 0.5));
+  const sun = new THREE.DirectionalLight(0xfff3e2, 0.62);
+  sun.position.set(10, 40, 50);
+  sun.target.position.set(25, 0, 22);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -32, right: 32, top: 32, bottom: -32, near: 1, far: 120 });
+  sun.shadow.bias = -0.0006;
+  scene.add(sun, sun.target);
+
+  const mat = c => new THREE.MeshStandardMaterial({ color: c, roughness: .85, metalness: 0 });
+  const M = {
+    wall: mat(0xecebe5), parapet: mat(0xdfe0da), frame: mat(0x39434a),
+    glass: new THREE.MeshStandardMaterial({ color: 0xa9cbd8, transparent: true, opacity: .28, roughness: .1, metalness: .1, depthWrite: false }),
+    corridor: mat(0xc9ccc4), ground: mat(0xcfd6cf), grass: mat(0x9fbe8f), path: mat(0xe3ddd0),
+    desk: mat(0xfbfbf8), dark: mat(0x3a4448), wood: mat(0xc9a57c), steel: mat(0x9aa4a8), core: mat(0xe9e8e2),
+    leaf: mat(0x5f8f58), trunk: mat(0x7a5c43), visitor: mat(0xd9502f), sofa: mat(0x6f8a9a), tile: mat(0xeeeeea),
+  };
+  const FLOOR = { vrij: 0x86c99c, optie: 0xe8bd62, verhuurd: 0xaab0ae, gedeeld: 0x93b1e0, algemeen: 0xe4e2dc, dim: 0xcfd2cc };
+
+  const world = new THREE.Group(); scene.add(world);
+  const tall = new THREE.Group(); world.add(tall);            // alles wat in de bovenaanzicht-modus lager wordt
+  const lintels = [];
+
+  function box(x, y, w, d, h, e, m, parent, shadow = true) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w * U, h, d * U), m);
+    mesh.position.set((x + w / 2) * U, e + h / 2, (y + d / 2) * U);
+    if (shadow) { mesh.castShadow = true; mesh.receiveShadow = true; }
+    (parent || world).add(mesh); return mesh;
+  }
+  function cyl(cx, cy, r, h, e, m, sz = 1, parent) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * U, r * U, h, 28), m);
+    mesh.scale.z = sz; mesh.position.set(cx * U, e + h / 2, cy * U);
+    mesh.castShadow = true; mesh.receiveShadow = true; (parent || world).add(mesh); return mesh;
+  }
+
+  // Grond, vloer, binnentuin
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), M.ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.set(25, -0.06, 22); ground.receiveShadow = true; scene.add(ground);
+  const outline = [[40, 60], [960, 60], [960, 320], [470, 320], [470, 560], [960, 560], [960, 820], [40, 820]];
+  const shape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x * U, -y * U)));
+  const slab = new THREE.Mesh(new THREE.ShapeGeometry(shape), M.corridor);
+  slab.rotation.x = -Math.PI / 2; slab.receiveShadow = true; world.add(slab);
+  box(470, 320, 490, 240, 0.02, -0.03, M.grass, world, false).receiveShadow = true;
+  box(480, 432, 470, 16, 0.02, 0.0, M.path, world, false);
+  [[540, 370], [640, 505], [760, 375], [880, 500], [840, 360], [600, 400]].forEach(([x, y], i) => {
+    cyl(x, y, 4, 2.2, 0, M.trunk);
+    const crown = new THREE.Mesh(new THREE.SphereGeometry(1.4 + (i % 3) * 0.35, 18, 14), M.leaf);
+    crown.position.set(x * U, 3 + (i % 2) * 0.4, y * U); crown.castShadow = true; world.add(crown);
+  });
+
+  // Ruimtevloeren
+  const floorMeshes = [], labelSprites = {};
+  rooms.forEach(r => {
+    const m = new THREE.MeshStandardMaterial({ color: FLOOR[r.status], roughness: .9 });
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(r.w * U, r.h * U), m);
+    f.rotation.x = -Math.PI / 2; f.position.set(r.cx * U, 0.012, r.cy * U);
+    f.receiveShadow = true; f.userData.roomId = r.id; world.add(f); floorMeshes.push(f); r.floor = f;
+  });
+
+  // Wanden
+  const outlineEdges = outline.map((p, i) => ({ a: p, b: outline[(i + 1) % outline.length], glass: !(p[0] === 470 && outline[(i + 1) % outline.length][0] === 470) }));
+  const colSegs = [];
+  function onOutline(x1, y1, x2, y2) {
+    return outlineEdges.some(({ a, b }) => {
+      if (y1 === y2 && a[1] === b[1] && a[1] === y1) return Math.min(x1, x2) >= Math.min(a[0], b[0]) && Math.max(x1, x2) <= Math.max(a[0], b[0]);
+      if (x1 === x2 && a[0] === b[0] && a[0] === x1) return Math.min(y1, y2) >= Math.min(a[1], b[1]) && Math.max(y1, y2) <= Math.max(a[1], b[1]);
+      return false;
+    });
+  }
+  function wallSeg(x1, y1, x2, y2, m = M.wall, h = WALL_H, e = 0) {
+    const horiz = y1 === y2, len = Math.abs(horiz ? x2 - x1 : y2 - y1);
+    if (len < 0.5) return;
+    const x = Math.min(x1, x2) - (horiz ? 0 : T / 2), y = Math.min(y1, y2) - (horiz ? T / 2 : 0);
+    box(x, y, horiz ? len : T, horiz ? T : len, h, e, m, tall);
+  }
+  function solidWall(x1, y1, x2, y2) { wallSeg(x1, y1, x2, y2); colSegs.push([x1, y1, x2, y2]); }
+  function edgeWithDoor(x1, y1, x2, y2, door) {
+    if (onOutline(x1, y1, x2, y2)) return;
+    const horiz = y1 === y2;
+    const hasDoor = door && (horiz ? door[1] === y1 && door[0] > Math.min(x1, x2) && door[0] < Math.max(x1, x2)
+                                   : door[0] === x1 && door[1] > Math.min(y1, y2) && door[1] < Math.max(y1, y2));
+    if (!hasDoor) return solidWall(x1, y1, x2, y2);
+    const d = horiz ? door[0] : door[1], lo = Math.min(horiz ? x1 : y1, horiz ? x2 : y2), hi = Math.max(horiz ? x1 : y1, horiz ? x2 : y2);
+    if (horiz) { solidWall(lo, y1, d - DOOR / 2, y1); solidWall(d + DOOR / 2, y1, hi, y1); }
+    else { solidWall(x1, lo, x1, d - DOOR / 2); solidWall(x1, d + DOOR / 2, x1, hi); }
+    const lin = horiz ? box(d - DOOR / 2, y1 - T / 2, DOOR, T, WALL_H - 2.15, 2.15, M.wall, tall) : box(x1 - T / 2, d - DOOR / 2, T, DOOR, WALL_H - 2.15, 2.15, M.wall, tall);
+    lintels.push(lin);
+  }
+  function rectEdges(x, y, w, h, door) {
+    edgeWithDoor(x, y, x + w, y, door); edgeWithDoor(x, y + h, x + w, y + h, door);
+    edgeWithDoor(x, y, x, y + h, door); edgeWithDoor(x + w, y, x + w, y + h, door);
+  }
+  rooms.forEach(r => rectEdges(r.x, r.y, r.w, r.h, r.door));
+  rectEdges(330, 300, 140, 280, [330, 440]);   // liftkern, open naar de hal
+
+  // Gevel: borstwering, glas, kozijnen
+  outlineEdges.forEach(({ a, b, glass }) => {
+    colSegs.push([a[0], a[1], b[0], b[1]]);
+    if (!glass) return wallSeg(a[0], a[1], b[0], b[1]);
+    wallSeg(a[0], a[1], b[0], b[1], M.parapet, 0.85, 0);
+    wallSeg(a[0], a[1], b[0], b[1], M.frame, 0.25, WALL_H - 0.25);
+    const horiz = a[1] === b[1], len = Math.abs(horiz ? b[0] - a[0] : b[1] - a[1]);
+    const g = horiz ? new THREE.Mesh(new THREE.BoxGeometry(len * U, WALL_H - 1.1, 0.03), M.glass) : new THREE.Mesh(new THREE.BoxGeometry(0.03, WALL_H - 1.1, len * U), M.glass);
+    g.position.set((a[0] + b[0]) / 2 * U, 0.85 + (WALL_H - 1.1) / 2, (a[1] + b[1]) / 2 * U); g.renderOrder = 2; tall.add(g);
+    const n = Math.round(len / 36);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
+      box(px - 1, py - 1, 2, 2, WALL_H - 1.1, 0.85, M.frame, tall);
+    }
+  });
+
+  // Liftkern
+  function solidBlock(x, y, w, d, h, m) { box(x, y, w, d, h, 0, m, tall); colSegs.push([x, y, x + w, y], [x, y + d, x + w, y + d], [x, y, x, y + d], [x + w, y, x + w, y + d]); }
+  [[345, 355, 415], [405, 355, 415], [345, 465, 465], [405, 465, 465]].forEach(([x, y, fy]) => {
+    solidBlock(x, y, 50, 60, WALL_H, M.core);
+    box(x + 12, fy - 0.6 + (fy === 415 ? 0 : -0.2), 26, 1.2, 2.1, 0, M.steel, tall);
+  });
+  function stairs(x, y, w, d, dir) {
+    const n = 9;
+    for (let i = 0; i < n; i++) {
+      const sy = dir > 0 ? y + i * d / n : y + d - (i + 1) * d / n;
+      box(x, sy, w, d / n, 0.17 * (i + 1), 0, M.tile, tall);
+    }
+    colSegs.push([x, y, x + w, y], [x, y + d, x + w, y + d], [x, y, x, y + d], [x + w, y, x + w, y + d]);
+  }
+  stairs(340, 304, 120, 44, -1); stairs(340, 532, 120, 44, 1);
+
+  // Receptie en planten
+  [250, 600].forEach(y => { box(300, y, 18, 34, 1.05, 0, M.wood); box(296, y - 2, 24, 38, 0.04, 1.05, M.desk); });
+  [[252, 232], [252, 648], [320, 380], [320, 500]].forEach(([x, y]) => {
+    cyl(x, y, 5, 0.5, 0, M.dark);
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), M.leaf); s.position.set(x * U, 0.95, y * U); s.castShadow = true; world.add(s);
+  });
+
+  // Meubilair
+  function chair(x, y, back) {
+    cyl(x, y, 1, 0.42, 0, M.dark); cyl(x, y, 5, 0.07, 0.42, M.dark);
+    if (back) box(x + back[0] * 5 - (back[0] ? 0.7 : 4), y + back[1] * 5 - (back[1] ? 0.7 : 4), back[0] ? 1.4 : 8, back[1] ? 1.4 : 8, 0.45, 0.48, M.dark);
+  }
+  function desk(x, y, w, d, monitor) {
+    box(x, y, w, d, 0.04, 0.72, M.desk);
+    box(x + 1, y + 1, 1.5, d - 2, 0.72, 0, M.steel); box(x + w - 2.5, y + 1, 1.5, d - 2, 0.72, 0, M.steel);
+    if (monitor) box(monitor[0], monitor[1], monitor[2], monitor[3], 0.34, 0.8, M.dark);
+  }
+  function table(cx, cy, rx, ry) { cyl(cx, cy, rx, 0.05, 0.72, M.wood, ry / rx); cyl(cx, cy, 2, 0.72, 0, M.steel); }
+  function furnish(r) {
+    const fx = r.x + 8, fw = r.w - 16, mx = r.cx, my = r.cy, top = r.y + 10, fh = r.h - 20;
+    switch (r.furn) {
+      case 'desks': {
+        const n = 4, cw = 52, ch = 60, gap = (fw - n * cw) / (n + 1);
+        for (let i = 0; i < n; i++) {
+          const x0 = fx + gap + i * (cw + gap), y0 = my - ch / 2;
+          for (let c = 0; c < 2; c++) for (let k = 0; k < 3; k++) {
+            const dx = x0 + 8 + c * 18, dy = y0 + k * 20;
+            desk(dx, dy + 0.5, 18, 19, c ? [dx + 1, dy + 5, 1, 10] : [dx + 16, dy + 5, 1, 10]);
+            chair(c ? x0 + 48 : x0 + 3, dy + 10, c ? [1, 0] : [-1, 0]);
+          }
+        }
+        box(r.x + 12, r.south ? r.y + 12 : r.y + r.h - 22, 60, 10, 1.1, 0, M.wood);
+        break;
+      }
+      case 'oval': {
+        const rx = Math.min(fw * 0.3, 36), ry = Math.min(fh * 0.25, 14);
+        table(mx, my, rx, ry);
+        for (const s of [-1, 1]) for (const k of [-0.55, 0, 0.55]) chair(mx + k * rx, my + s * (ry + 7), [0, s]);
+        chair(mx - rx - 7, my, [-1, 0]); chair(mx + rx + 7, my, [1, 0]);
+        box(r.x + r.w - 5, my - 18, 1.5, 36, 1.0, 1.0, M.dark);
+        break;
+      }
+      case 'round':
+        for (const dx of [-0.24, 0.12]) {
+          const cx = r.x + r.w * (0.5 + dx);
+          table(cx, my, 11, 11);
+          chair(cx - 18, my, [-1, 0]); chair(cx + 18, my, [1, 0]); chair(cx, my - 18, [0, -1]); chair(cx, my + 18, [0, 1]);
+        }
+        box(r.x + r.w - 30, top, 20, fh, 0.9, 0, M.wood);
+        break;
+      case 'small': case 'duo':
+        for (const k of (r.furn === 'small' ? [0.2, 0.58] : [0.3])) {
+          const dx = r.x + r.w * k, s = r.south ? -1 : 1;
+          desk(dx, my - 9 - s * 8, 34, 18, [dx + 12, r.south ? my - 1 : my - 16, 10, 1]);
+          chair(dx + 17, my + s * 10, [0, s]);
+        }
+        break;
+      case 'exec': {
+        const s = r.south ? -1 : 1;
+        desk(fx + 8, my - 10 - s * 6, 48, 22, [fx + 22, r.south ? my + 14 : my - 14, 20, 1]);
+        chair(fx + 32, my + s * 14, [0, s]);
+        box(fx + 76, my - 16, 18, 36, 0.45, 0, M.sofa); box(fx + 76, my - 16, 4, 36, 0.8, 0, M.sofa);
+        box(r.x + r.w - 34, r.y + 3, 30, r.h - 6, 2.4, 0, M.wall, tall);
+        break;
+      }
+      case 'u': {
+        const w = 74, h = Math.min(fh - 30, 140), x0 = mx - w / 2, y0 = my - h / 2, t = 18;
+        box(x0, y0, t, h, 0.74, 0, M.wood); box(x0 + w - t, y0, t, h, 0.74, 0, M.wood);
+        box(x0 + t, r.south ? y0 : y0 + h - t, w - 2 * t, t, 0.74, 0, M.wood);
+        for (let i = 0; i < 6; i++) { const y = y0 + 12 + i * (h - 24) / 5; chair(x0 - 8, y, [-1, 0]); chair(x0 + w + 8, y, [1, 0]); }
+        box(r.x + 3, r.south ? r.y + r.h - 70 : r.y + 30, 1.5, 40, 1.2, 0.9, M.dark);
+        break;
+      }
+      case 'wc': {
+        const yb = r.south ? r.y + r.h - 44 : r.y + 3;
+        for (let i = 0; i <= 4; i++) box(fx + 2 + i * 32, yb, 1.4, 40, 2.0, 0, M.parapet, tall);
+        for (let i = 0; i < 4; i++) box(fx + 12 + i * 32, r.south ? yb + 28 : yb + 2, 10, 12, 0.42, 0, M.desk);
+        box(fx + 10, r.south ? r.y + 10 : r.y + r.h - 22, 110, 12, 0.85, 0, M.wood);
+        break;
+      }
+      case 'pantry':
+        box(r.x + 3, r.y + 6, 14, r.h - 12, 0.92, 0, M.wood); box(r.x + 3, r.y + 6, 14, 14, 1.9, 0, M.steel);
+        table(mx + 8, my, 9, 9); chair(mx + 8, my - 15, [0, -1]); chair(mx + 8, my + 15, [0, 1]);
+        break;
+      case 'stair': {
+        const sy = r.south ? r.y + 6 : r.y + r.h * 0.4, d = r.h * 0.55;
+        stairs(r.x + 6, sy, r.w - 12, d, r.south ? -1 : 1);
+        break;
+      }
+    }
+  }
+  rooms.forEach(furnish);
+
+  // Labels boven de ruimtes
+  function labelTexture(title, sub, color) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 176;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(248,249,246,0.94)';
+    const rr = 26; g.beginPath(); g.moveTo(rr, 8); g.arcTo(504, 8, 504, 168, rr); g.arcTo(504, 168, 8, 168, rr); g.arcTo(8, 168, 8, 8, rr); g.arcTo(8, 8, 504, 8, rr); g.fill();
+    g.fillStyle = color; g.fillRect(8, 8, 14, 160);
+    g.fillStyle = '#1c2629'; g.font = '600 56px "Instrument Sans", system-ui, sans-serif'; g.textBaseline = 'alphabetic';
+    g.fillText(title, 44, 80, 440);
+    g.fillStyle = color; g.font = '500 40px "IBM Plex Mono", ui-monospace, monospace';
+    g.fillText(sub, 44, 140, 440);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+  }
+  const LABEL_COLOR = { vrij: '#2e8a57', optie: '#b77b12', verhuurd: '#7d888b', gedeeld: '#3f6aa1', algemeen: '#4c5a5e' };
+  function makeLabels() {
+    rooms.forEach(r => {
+      const color = LABEL_COLOR[r.status];
+      const sub = r.type === 'kantoor' ? `${r.id} · ${statusLabel(r.status)}${r.status !== 'verhuurd' ? ' · ' + r.m2 + ' m²' : ''}` : r.type === 'gedeeld' ? `${r.id} · Gedeeld` : 'Algemeen';
+      const walk = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(r.name, sub, color), depthTest: true, transparent: true }));
+      walk.scale.set(2.6, 0.9, 1); walk.position.set(r.cx * U, 2.45, r.cy * U); walk.userData.roomId = r.id;
+      const over = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(r.id, statusLabel(r.status), color), depthTest: false, transparent: true }));
+      over.scale.set(5.2, 1.8, 1); over.position.set(r.cx * U, 2.6, r.cy * U); over.userData.roomId = r.id; over.renderOrder = 5;
+      if (r.type === 'algemeen') over.visible = false;
+      world.add(walk, over);
+      labelSprites[r.id] = { walk, over };
+    });
+    applyModeVisibility();
+  }
+
+  // Bezoeker (zichtbaar van boven)
+  const figure = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 1.3, 20), M.visitor); body.position.y = 0.65; body.castShadow = true;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 14), M.visitor); head.position.y = 1.55; head.castShadow = true;
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.4, 12), M.visitor); nose.rotation.x = -Math.PI / 2; nose.position.set(0, 1.2, -0.38);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.7, 36), new THREE.MeshBasicMaterial({ color: 0xd9502f, transparent: true, opacity: .5 }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03;
+  figure.add(body, head, nose, ring); scene.add(figure);
+
+  const v = { x: nodes.lift[0] * U, z: nodes.lift[1] * U, yaw: Math.PI / 2, pitch: -0.05 };
+
+  // ---------- Camera en modi ----------
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(25, 0, 22);
+  controls.enableDamping = true; controls.dampingFactor = .08;
+  controls.maxPolarAngle = Math.PI * 0.44; controls.minDistance = 12; controls.maxDistance = 110;
+  let mode = 'over', wallScale = 0.42, wallTarget = 0.42, camTween = null;
+  tall.scale.y = wallScale;
+
+  function overviewPose() {
+    const aspect = stage.clientWidth / Math.max(1, stage.clientHeight);
+    const dist = aspect < 0.8 ? 86 : aspect < 1.2 ? 62 : 46;
+    return { pos: new THREE.Vector3(25, dist * 0.8, 22 + dist * 0.6), target: new THREE.Vector3(25, 0, 22) };
+  }
+  function eyePose() {
+    const dir = new THREE.Vector3(-Math.sin(v.yaw) * Math.cos(v.pitch), Math.sin(v.pitch), -Math.cos(v.yaw) * Math.cos(v.pitch));
+    const pos = new THREE.Vector3(v.x, 1.62, v.z);
+    return { pos, target: pos.clone().add(dir.multiplyScalar(4)) };
+  }
+  function applyModeVisibility() {
+    const walk = mode === 'walk';
+    Object.values(labelSprites).forEach(({ walk: w, over: o }) => { w.visible = walk && !dimmed(w.userData.roomId); o.visible = !walk && byId[o.userData.roomId].type !== 'algemeen' && !dimmed(o.userData.roomId); });
+    lintels.forEach(l => l.visible = walk);
+    figure.visible = !walk;
+  }
+  function setMode(m) {
+    if (m === mode && !camTween) return;
+    const from = { pos: camera.position.clone(), target: mode === 'walk' ? eyePose().target : controls.target.clone() };
+    mode = m;
+    document.getElementById('m-over').setAttribute('aria-pressed', String(m === 'over'));
+    document.getElementById('m-walk').setAttribute('aria-pressed', String(m === 'walk'));
+    stage.classList.toggle('walk', m === 'walk');
+    document.getElementById('dpad').hidden = m !== 'walk';
+    wallTarget = m === 'walk' ? 1 : 0.42;
+    controls.enabled = false;
+    camera.fov = m === 'walk' ? 68 : 50; camera.updateProjectionMatrix();
+    applyModeVisibility();
+    updateHint();
+    camTween = { from, t0: performance.now(), dur: reduceMotion ? 1 : 1100, to: m };
+    if (shownRoom) renderRoom(byId[shownRoom]);
+  }
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function updateHint() {
+    document.getElementById('hint').textContent = mode === 'walk'
+      ? 'Sleep om rond te kijken · pijltjes of WASD om te lopen · klik op een vloer om erheen te lopen'
+      : 'Sleep om te draaien · scroll of knijp om te zoomen · klik op een ruimte om erheen te lopen';
+  }
+  document.getElementById('m-over').addEventListener('click', () => setMode('over'));
+  document.getElementById('m-walk').addEventListener('click', () => setMode('walk'));
+
+  // ---------- Lopen ----------
+  const R = 0.3;
+  function segDist(px, pz, s) {
+    const ax = s[0] * U, az = s[1] * U, bx = s[2] * U, bz = s[3] * U;
+    const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz || 1;
+    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / l2));
+    return Math.hypot(px - ax - t * dx, pz - az - t * dz);
+  }
+  const blocked = (x, z) => colSegs.some(s => segDist(x, z, s) < R + T * U / 2);
+  function tryMove(dx, dz) {
+    if (!blocked(v.x + dx, v.z + dz)) { v.x += dx; v.z += dz; }
+    else if (!blocked(v.x + dx, v.z)) v.x += dx;
+    else if (!blocked(v.x, v.z + dz)) v.z += dz;
+  }
+
+  const keys = {};
+  const keyMap = { ArrowUp: 'fwd', KeyW: 'fwd', ArrowDown: 'back', KeyS: 'back', ArrowLeft: 'tl', ArrowRight: 'tr', KeyA: 'sl', KeyD: 'sr', KeyQ: 'tl', KeyE: 'tr' };
+  window.addEventListener('keydown', e => {
+    if (mode !== 'walk' || !keyMap[e.code] || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    keys[keyMap[e.code]] = true; autoWalk = null; e.preventDefault();
+  });
+  window.addEventListener('keyup', e => { if (keyMap[e.code]) keys[keyMap[e.code]] = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+  document.querySelectorAll('.dpad button').forEach(b => {
+    const k = b.dataset.key;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); keys[k] = true; autoWalk = null; b.setPointerCapture(e.pointerId); });
+    const up = () => { keys[k] = false; };
+    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
+  });
+
+  // Automatisch lopen naar een ruimte
+  let autoWalk = null, here = { room: null, node: 'lift' };
+  function nearestNode(px, py) { let best = 'lift', bd = Infinity; for (const k in nodes) { const d = Math.hypot(nodes[k][0] - px, nodes[k][1] - py); if (d < bd) { bd = d; best = k; } } return best; }
+  function pathTo(targetNode, r) {
+    const px = v.x / U, py = v.z / U, pts = [[px, py]];
+    const cur = roomAt(px, py);
+    let start;
+    if (cur) { pts.push(cur.door); start = cur.node; } else start = nearestNode(px, py);
+    route(start, targetNode).forEach(n => pts.push(nodes[n]));
+    if (r) { pts.push(r.door); const inset = r.furn === 'stair' ? 14 : 26; pts.push([r.door[0] + (r.door[0] === r.x ? inset : r.door[0] === r.x + r.w ? -inset : 0), r.door[1] + (r.door[1] === r.y ? inset : r.door[1] === r.y + r.h ? -inset : 0)]); }
+    return pts.map(([x, y]) => [x * U, y * U]).filter((p, i, a) => i === 0 || Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) > 0.05);
+  }
+  function startWalk(pts, faceTo) {
+    if (reduceMotion) { const e = pts[pts.length - 1]; v.x = e[0]; v.z = e[1]; if (faceTo) v.yaw = Math.atan2(-(faceTo[0] - v.x), -(faceTo[1] - v.z)); autoWalk = null; return; }
+    autoWalk = { pts, i: 1, faceTo };
+  }
+  const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+
+  let selected = null;
+  function highlight(id) {
+    if (selected) byId[selected].floor.material.emissive.setHex(0x000000);
+    selected = id;
+    if (id) byId[id].floor.material.emissive.setHex(0x2a1a10);
+  }
+  function goTo(id) {
+    const r = byId[id];
+    highlight(id);
+    startWalk(pathTo(r.node, r), [r.cx * U, r.cy * U]);
+    here = { room: id, node: r.node };
+    renderRoom(r);
+  }
+  function goLift() {
+    highlight(null);
+    startWalk(pathTo('lift', null), [nodes.hall[0] * U, nodes.hall[1] * U]);
+    here = { room: null, node: 'lift' };
+    renderRoom(null);
+  }
+
+  // Klikken en slepen op het model
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  let drag = null;
+  renderer.domElement.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, moved: 0, yaw: v.yaw, pitch: v.pitch }; if (mode === 'walk') renderer.domElement.setPointerCapture(e.pointerId); });
+  renderer.domElement.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+    if (mode === 'walk' && drag.moved > 4) {
+      autoWalk = null;
+      v.yaw = drag.yaw + dx * 0.005;
+      v.pitch = Math.max(-1.1, Math.min(0.9, drag.pitch + dy * 0.004));
+    }
+  });
+  renderer.domElement.addEventListener('pointerup', e => {
+    if (drag && drag.moved < 6) pick(e);
+    drag = null;
+  });
+  function pick(e) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const sprites = Object.values(labelSprites).map(s => mode === 'walk' ? s.walk : s.over).filter(s => s.visible);
+    let hit = ray.intersectObjects(sprites)[0];
+    if (!hit) {
+      const all = ray.intersectObjects(world.children.concat(tall.children), false);
+      hit = all.find(h => h.object.userData.roomId) || null;
+      if (all[0] && hit && all[0].distance < hit.distance - 0.3 && all[0].object.parent === tall && mode === 'walk') hit = null;
+    }
+    if (hit) { stopTourIfOutside(hit.object.userData.roomId); goTo(hit.object.userData.roomId); }
+  }
+
+  // ---------- Minikaart ----------
+  const mini = document.getElementById('mini'), mg = mini.getContext('2d');
+  const MS = 0.4, MOX = 30, MOY = 50;
+  const MINI_FILL = { vrij: '#86c99c', optie: '#e8bd62', verhuurd: '#aab0ae', gedeeld: '#93b1e0', algemeen: '#f3f2ee' };
+  function drawMini() {
+    mg.clearRect(0, 0, mini.width, mini.height);
+    mg.save(); mg.scale(MS, MS); mg.translate(-MOX, -MOY);
+    mg.fillStyle = '#d9dcd5'; mg.beginPath(); outline.forEach(([x, y], i) => i ? mg.lineTo(x, y) : mg.moveTo(x, y)); mg.closePath(); mg.fill();
+    mg.fillStyle = '#9fbe8f'; mg.fillRect(470, 320, 490, 240);
+    mg.fillStyle = '#e9e8e2'; mg.fillRect(330, 300, 140, 280);
+    rooms.forEach(r => {
+      mg.fillStyle = dimmed(r.id) ? '#e6e7e3' : MINI_FILL[r.status]; mg.fillRect(r.x, r.y, r.w, r.h);
+      mg.strokeStyle = r.id === selected ? '#d9502f' : '#39434a'; mg.lineWidth = r.id === selected ? 7 : 2.5; mg.strokeRect(r.x, r.y, r.w, r.h);
+    });
+    mg.strokeStyle = '#39434a'; mg.lineWidth = 5; mg.beginPath(); outline.forEach(([x, y], i) => i ? mg.lineTo(x, y) : mg.moveTo(x, y)); mg.closePath(); mg.stroke();
+    const px = v.x / U, py = v.z / U;
+    mg.fillStyle = 'rgba(217,80,47,.28)'; mg.beginPath(); mg.moveTo(px, py);
+    mg.arc(px, py, 70, -Math.PI / 2 - v.yaw - 0.55, -Math.PI / 2 - v.yaw + 0.55); mg.closePath(); mg.fill();
+    mg.fillStyle = '#d9502f'; mg.strokeStyle = '#fff'; mg.lineWidth = 5; mg.beginPath(); mg.arc(px, py, 13, 0, Math.PI * 2); mg.fill(); mg.stroke();
+    mg.restore();
+  }
+  mini.addEventListener('click', e => {
+    const rect = mini.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width * mini.width / MS + MOX, py = (e.clientY - rect.top) / rect.height * mini.height / MS + MOY;
+    const r = roomAt(px, py);
+    if (r) { stopTourIfOutside(r.id); goTo(r.id); } else if (px > 240 && px < 470 && py > 300 && py < 580) { endTour(); goLift(); }
+  });
+
+  // ---------- Filter ----------
+  let filter = 'alle';
+  const dimmed = id => filter !== 'alle' && byId[id].status !== filter;
+  document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    rooms.forEach(r => r.floor.material.color.setHex(dimmed(r.id) ? FLOOR.dim : FLOOR[r.status]));
+    applyModeVisibility();
+  }));
+
+  // ---------- Rondleiding ----------
+  const order = chainX.map(x => 'n' + x).concat(chainX.slice().reverse().map(x => 's' + x));
+  const tour = { active: false, i: 0, list: [] };
+  const tourbar = document.getElementById('tourbar');
+  function tourLabel() {
+    document.getElementById('tour-step').textContent = `Stop ${tour.i + 1} van ${tour.list.length} · ${byId[tour.list[tour.i]].name}`;
+    document.getElementById('tour-prev').disabled = tour.i === 0;
+    document.getElementById('tour-next').textContent = tour.i === tour.list.length - 1 ? 'Afronden' : 'Volgende →';
+  }
+  function showStop() { tourLabel(); goTo(tour.list[tour.i]); }
+  function endTour() { tour.active = false; tourbar.hidden = true; }
+  function stopTourIfOutside(id) { if (!tour.active) return; const k = tour.list.indexOf(id); if (k >= 0) { tour.i = k; tourLabel(); } else endTour(); }
+  document.getElementById('tour-start').addEventListener('click', () => {
+    tour.list = available.slice().sort((a, b) => order.indexOf(a.node) - order.indexOf(b.node)).map(r => r.id);
+    tour.i = 0; tour.active = true; tourbar.hidden = false; setMode('walk'); showStop();
+  });
+  document.getElementById('tour-prev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; showStop(); } });
+  document.getElementById('tour-next').addEventListener('click', () => { if (tour.i < tour.list.length - 1) { tour.i++; showStop(); } else { endTour(); goLift(); } });
+  document.getElementById('tour-stop').addEventListener('click', () => { endTour(); goLift(); });
+  document.getElementById('to-lift').addEventListener('click', () => { endTour(); goLift(); });
+
+  // ---------- Hoofdlus ----------
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / Math.max(1, h); camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage); resize();
+  const start = overviewPose(); camera.position.copy(start.pos); controls.update();
+
+  const whereEl = document.getElementById('where');
+  let lastPlace = '', lastRoom = null, last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+
+    // handmatig lopen
+    if (mode === 'walk' && !camTween) {
+      const turn = (keys.tl ? 1 : 0) - (keys.tr ? 1 : 0);
+      v.yaw += turn * 1.8 * dt;
+      const f = (keys.fwd ? 1 : 0) - (keys.back ? 1 : 0), s = (keys.sr ? 1 : 0) - (keys.sl ? 1 : 0);
+      if (f || s) {
+        const sp = 2.4 * dt, sy = Math.sin(v.yaw), cy = Math.cos(v.yaw);
+        tryMove((-sy * f + cy * s) * sp, (-cy * f - sy * s) * sp);
+      }
+    }
+    // automatisch lopen
+    if (autoWalk) {
+      const tgt = autoWalk.pts[autoWalk.i];
+      const dx = tgt[0] - v.x, dz = tgt[1] - v.z, d = Math.hypot(dx, dz), step = 4.2 * dt;
+      if (d > 0.02) v.yaw += angDiff(v.yaw, Math.atan2(-dx, -dz)) * Math.min(1, dt * 7);
+      v.pitch += (-0.06 - v.pitch) * Math.min(1, dt * 3);
+      if (d <= step) { v.x = tgt[0]; v.z = tgt[1]; autoWalk.i++; }
+      else { v.x += dx / d * step; v.z += dz / d * step; }
+      if (autoWalk.i >= autoWalk.pts.length) {
+        const ft = autoWalk.faceTo; autoWalk = ft ? { turnTo: Math.atan2(-(ft[0] - v.x), -(ft[1] - v.z)), pts: [], i: 0 } : null;
+      }
+      if (autoWalk && autoWalk.turnTo !== undefined) {
+        const a = angDiff(v.yaw, autoWalk.turnTo); v.yaw += a * Math.min(1, dt * 5); if (Math.abs(a) < 0.01) autoWalk = null;
+      }
+    }
+
+    figure.position.set(v.x, 0, v.z); figure.rotation.y = v.yaw;
+    ring.material.opacity = 0.35 + 0.25 * Math.sin(now / 300);
+
+    wallScale += (wallTarget - wallScale) * Math.min(1, dt * 5);
+    tall.scale.y = wallScale;
+
+    if (camTween) {
+      const t = Math.min(1, (now - camTween.t0) / camTween.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const to = camTween.to === 'walk' ? eyePose() : overviewPose();
+      camera.position.lerpVectors(camTween.from.pos, to.pos, k);
+      const look = new THREE.Vector3().lerpVectors(camTween.from.target, to.target, k);
+      camera.lookAt(look);
+      if (t >= 1) {
+        camTween = null;
+        if (mode === 'over') { controls.target.copy(to.target); controls.enabled = true; controls.update(); }
+      }
+    } else if (mode === 'walk') {
+      camera.position.set(v.x, 1.62, v.z); camera.rotation.set(v.pitch, v.yaw, 0);
+    } else controls.update();
+
+    // Waar ben ik?
+    const px = v.x / U, py = v.z / U, place = placeName(px, py);
+    if (place !== lastPlace) { whereEl.innerHTML = `U bent in <b>${place}</b>`; lastPlace = place; }
+    const cur = roomAt(px, py);
+    if (!autoWalk && cur && cur.id !== lastRoom && cur.id !== shownRoom) { highlight(cur.id); renderRoom(cur); stopTourIfOutside(cur.id); }
+    lastRoom = cur ? cur.id : null;
+
+    drawMini();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  updateHint();
+  renderOverview();
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(makeLabels, makeLabels);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

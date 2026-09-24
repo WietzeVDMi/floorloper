@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="nl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>
+<body>
+<title>Verdieping 3 Rondleiding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  .altlink { font: 600 14px var(--body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  :root {
+    --paper: #eef0ec;
+    --sheet: #f8f9f6;
+    --ink: #1c2629;
+    --ink-2: #4c5a5e;
+    --ink-3: #8a9598;
+    --line: #d3d8d3;
+    --wall: #263236;
+    --floor: #ffffff;
+    --corridor: #e6e9e4;
+    --void: #dfe3dd;
+    --vrij: #2e8a57;
+    --vrij-bg: #d8efdf;
+    --optie: #b77b12;
+    --optie-bg: #f6e6c4;
+    --verhuurd: #7d888b;
+    --verhuurd-bg: #e3e6e4;
+    --gedeeld: #3f6aa1;
+    --gedeeld-bg: #dce5f2;
+    --visitor: #d9502f;
+    --focus: #3f6aa1;
+    --furn: #b9c1bd;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
+      --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
+      --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
+      --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
+      --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
+    --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
+    --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
+    --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
+    --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-inline: 16px;
+    padding-block: 20px 40px;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 4vw, 38px); line-height: 1.05; margin: 4px 0 0; text-wrap: balance; letter-spacing: -.01em; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-2); }
+  .summary b { font-family: var(--mono); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .plan-card { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font: 500 13px var(--body); color: var(--ink-2); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .btn {
+    font: 600 14px var(--body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--sheet);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  button:focus-visible, .room:focus-visible, .list-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .tourbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--corridor); }
+  .tourbar .step { font-family: var(--mono); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; margin-right: auto; }
+
+  .svg-scroll { overflow-x: auto; }
+  svg.plan { display: block; width: 100%; min-width: 560px; height: auto; user-select: none; }
+
+  .room { cursor: pointer; }
+  .room .rf { stroke: var(--wall); stroke-width: 2; transition: filter .15s; }
+  .room:hover .rf { filter: brightness(.96); }
+  .room.selected .rf { stroke: var(--visitor); stroke-width: 3.5; }
+  .room.dim { opacity: .35; }
+  .st-vrij .rf { fill: var(--vrij-bg); }
+  .st-optie .rf { fill: var(--optie-bg); }
+  .st-verhuurd .rf { fill: url(#hatch); }
+  .st-gedeeld .rf { fill: var(--gedeeld-bg); }
+  .st-algemeen .rf { fill: var(--floor); }
+  .code { font: 500 11px var(--mono); fill: var(--ink-2); letter-spacing: .04em; }
+  .rname { font: 600 11.5px var(--body); fill: var(--ink); }
+  .st-vrij .code { fill: var(--vrij); }
+  .st-optie .code { fill: var(--optie); }
+  .st-gedeeld .code { fill: var(--gedeeld); }
+  .furn { fill: none; stroke: var(--furn); stroke-width: 1.4; pointer-events: none; }
+  .furn.solid { fill: var(--furn); stroke: none; }
+  .wall-outer { fill: none; stroke: var(--wall); stroke-width: 5; stroke-linejoin: miter; }
+  .corr { fill: var(--corridor); }
+  .void { fill: var(--void); stroke: var(--ink-3); stroke-dasharray: 6 5; stroke-width: 1; }
+  .void-label { font: 500 12px var(--mono); fill: var(--ink-3); letter-spacing: .1em; }
+  .door { fill: var(--floor); }
+  .corr-label { font: 500 10px var(--mono); fill: var(--ink-3); letter-spacing: .12em; }
+  .trail { fill: none; stroke: var(--visitor); stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; opacity: .8; }
+  .visitor-halo { fill: var(--visitor); opacity: .18; }
+  .visitor-dot { fill: var(--visitor); stroke: var(--sheet); stroke-width: 3; }
+  @media (prefers-reduced-motion: no-preference) {
+    .visitor-halo { animation: pulse 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes pulse { 0% { transform: scale(.6); opacity: .35; } 100% { transform: scale(1.8); opacity: 0; } }
+  }
+  .scalebar line { stroke: var(--ink-2); stroke-width: 1.5; }
+  .scalebar text { font: 500 10px var(--mono); fill: var(--ink-2); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 16px; height: 12px; border-radius: 2px; border: 1.5px solid var(--wall); display: inline-block; }
+
+  aside { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+  @media (min-width: 981px) { aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); } }
+  aside h2 { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.15; margin: 0; text-wrap: balance; }
+  aside h3 { font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+  aside p { margin: 0; color: var(--ink-2); max-width: 60ch; }
+  .pill { font: 600 12px var(--body); border-radius: 999px; padding: 3px 10px; display: inline-flex; align-items: center; gap: 6px; width: fit-content; }
+  .pill.vrij { background: var(--vrij-bg); color: var(--vrij); }
+  .pill.optie { background: var(--optie-bg); color: var(--optie); }
+  .pill.verhuurd { background: var(--verhuurd-bg); color: var(--verhuurd); }
+  .pill.gedeeld { background: var(--gedeeld-bg); color: var(--gedeeld); }
+  .pill.algemeen { background: var(--corridor); color: var(--ink-2); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .stat { background: var(--sheet); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .stat .k { font-size: 12px; color: var(--ink-3); }
+  .stat .v { font: 500 17px var(--mono); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .list-row {
+    display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    padding: 10px 4px; border-bottom: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-top: 0;
+    text-align: left; font: inherit; color: inherit; cursor: pointer; width: 100%;
+  }
+  .list-row:hover { background: var(--corridor); }
+  .list-row .c { font: 500 12px var(--mono); }
+  .list-row .n { font-weight: 600; font-size: 14px; }
+  .list-row .m { font-size: 12px; color: var(--ink-3); }
+  .list-row .p { font: 500 13px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .note { font-size: 12px; color: var(--ink-3); }
+  .shortlist-count { font-family: var(--mono); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Kantoorverdieping · 3e etage · Bruto ca. 1.650 m²</div>
+      <h1>Loop door de verdieping</h1>
+    </div>
+    <div class="summary" id="summary"></div>
+    <a class="altlink" href="index.html">3D-weergave →</a>
+  </header>
+
+  <div class="layout">
+    <section class="plan-card" aria-label="Plattegrond">
+      <div class="toolbar">
+        <div class="chips" role="group" aria-label="Filter op beschikbaarheid">
+          <button class="chip" id="f-alle" data-filter="alle" aria-pressed="true">Alle ruimtes</button>
+          <button class="chip" id="f-vrij" data-filter="vrij" aria-pressed="false"><span class="dot" style="background:var(--vrij)"></span>Vrij</button>
+          <button class="chip" id="f-optie" data-filter="optie" aria-pressed="false"><span class="dot" style="background:var(--optie)"></span>Onder optie</button>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="to-lift">Terug naar lift</button>
+          <button class="btn" id="tour-start">Start rondleiding</button>
+        </div>
+      </div>
+      <div class="tourbar" id="tourbar" hidden>
+        <span class="step" id="tour-step"></span>
+        <button class="btn ghost" id="tour-prev">← Vorige</button>
+        <button class="btn" id="tour-next">Volgende →</button>
+        <button class="btn ghost" id="tour-stop">Stop</button>
+      </div>
+      <div class="svg-scroll">
+        <svg class="plan" id="plan" viewBox="20 40 960 820" role="img" aria-label="Plattegrond van de verdieping met vrije en verhuurde ruimtes">
+          <defs>
+            <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="8" height="8" style="fill:var(--verhuurd-bg)"></rect>
+              <line x1="0" y1="0" x2="0" y2="8" style="stroke:var(--ink-3);stroke-width:1.2;opacity:.45"></line>
+            </pattern>
+          </defs>
+          <g id="g-base"></g>
+          <g id="g-rooms"></g>
+          <g id="g-walls"></g>
+          <g id="g-trail"></g>
+          <g id="g-visitor"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--vrij-bg)"></i>Vrij</span>
+        <span><i class="sw" style="background:var(--optie-bg)"></i>Onder optie</span>
+        <span><svg width="16" height="12" aria-hidden="true"><rect x=".75" y=".75" width="14.5" height="10.5" rx="2" fill="url(#hatch)" style="stroke:var(--wall);stroke-width:1.5"></rect></svg>Verhuurd</span>
+        <span><i class="sw" style="background:var(--gedeeld-bg)"></i>Gedeeld (voor alle huurders)</span>
+        <span><i class="dot" style="background:var(--visitor)"></i>U bent hier</span>
+      </div>
+    </section>
+
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+  <p class="note">Beschikbaarheid, oppervlaktes en huurprijzen zijn voorbeeldgegevens. Oppervlakte is berekend uit de tekening (1 raster = 5 cm), huur is excl. btw en servicekosten.</p>
+</div>
+
+<script>
+(function () {
+  const M2_PER_UNIT = 0.0025;      // 5 cm per tekeneenheid
+  const M_PER_UNIT = 0.05;
+  const RENT = 17.5;               // € per m² per maand
+  const SERVICE = 4.25;            // servicekosten € per m² per maand
+  const H = 880;                   // spiegelas: y -> H - y
+
+  // ---- Ruimtes (noordvleugel; zuidvleugel wordt gespiegeld) ----
+  const north = [
+    { id: 'A1', name: 'Kantoortuin Noord', type: 'kantoor', x: 390, y: 60, w: 420, h: 120, door: [600, 180], node: 'n600', seats: 24, furn: 'desks', status: 'vrij', from: '1 nov 2026', text: 'Open werkvloer met daglicht aan twee zijden. Vier werkeilanden van zes plekken, direct aan de gang met pantry.' },
+    { id: 'A2', name: 'Directiekamer Noord', type: 'kantoor', x: 810, y: 60, w: 150, h: 120, door: [885, 180], node: 'n885', seats: 3, furn: 'exec', status: 'verhuurd', text: 'Afgesloten kamer met eigen toilet en zithoek. Verhuurd tot en met 2029.' },
+    { id: 'A3', name: 'Kantoor Noord', type: 'kantoor', x: 330, y: 220, w: 140, h: 80, door: [400, 220], node: 'n400', seats: 4, furn: 'small', status: 'vrij', from: 'direct', text: 'Compacte kamer naast de receptie en de liften. Geschikt voor een team van drie tot vier.' },
+    { id: 'A4', name: 'Projectruimte Noord', type: 'kantoor', x: 470, y: 220, w: 170, h: 100, door: [555, 220], node: 'n555', seats: 6, furn: 'round', status: 'optie', from: '1 dec 2026', text: 'Kamer met twee overlegtafels en werkplekken langs de wand. Er ligt een optie tot 15 oktober.' },
+    { id: 'PN', name: 'Pantry Noord', type: 'algemeen', x: 640, y: 220, w: 60, h: 100, door: [670, 220], node: 'n670', furn: 'pantry', text: 'Koffie, koelkast en vaatwasser. Voor alle huurders op deze vleugel.' },
+    { id: 'A5', name: 'Vergaderkamer Oost', type: 'gedeeld', x: 700, y: 220, w: 110, h: 100, door: [755, 220], node: 'n755', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht met scherm. Te reserveren via de receptie, inbegrepen in de servicekosten.' },
+    { id: 'A6', name: 'Flexkamer Noord', type: 'kantoor', x: 810, y: 220, w: 90, h: 100, door: [855, 220], node: 'n855', seats: 2, furn: 'duo', status: 'vrij', from: 'direct', text: 'Kleine kamer voor twee personen, ook te huren als belkamer of opslag.' },
+    { id: 'TNO', name: 'Trappenhuis Noord-Oost', type: 'algemeen', x: 900, y: 220, w: 60, h: 100, door: [930, 220], node: 'n930', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
+    { id: 'TNW', name: 'Trappenhuis Noord-West', type: 'algemeen', x: 40, y: 60, w: 60, h: 120, door: [70, 180], node: 'n70', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
+    { id: 'WN', name: 'Toiletten Noord', type: 'algemeen', x: 100, y: 60, w: 140, h: 120, door: [170, 180], node: 'n170', furn: 'wc', text: 'Dames, heren en een mindervalidentoilet.' },
+    { id: 'VN', name: 'Vergaderkamer Noord', type: 'gedeeld', x: 240, y: 60, w: 150, h: 120, door: [315, 180], node: 'n315', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht bij de receptie. Te reserveren via de receptie.' },
+    { id: 'BN', name: 'Boardroom Noord', type: 'gedeeld', x: 40, y: 220, w: 200, h: 210, door: [240, 325], node: 'h325', seats: 16, furn: 'u', text: 'Grote zaal met U-opstelling voor zestien personen. Kan worden gekoppeld aan Boardroom Zuid.' },
+  ];
+
+  const southOverride = {
+    A1: { id: 'B1', name: 'Kantoortuin Zuid', status: 'vrij', from: '1 jan 2027', text: 'Open werkvloer op het zuiden met vier werkeilanden van zes plekken. De huidige huurder vertrekt eind 2026.' },
+    A2: { id: 'B2', name: 'Directiekamer Zuid', status: 'vrij', from: 'direct', text: 'Afgesloten kamer met eigen toilet en zithoek, grenzend aan de kantoortuin.' },
+    A3: { id: 'B3', name: 'Kantoor Zuid', status: 'verhuurd', text: 'Compacte kamer naast de receptie. Verhuurd tot en met 2027.' },
+    A4: { id: 'B4', name: 'Projectruimte Zuid', status: 'vrij', from: 'direct', text: 'Kamer met twee overlegtafels en werkplekken langs de wand.' },
+    PN: { id: 'PZ', name: 'Pantry Zuid' },
+    A5: { id: 'B5', name: 'Vergaderkamer Zuid-Oost' },
+    A6: { id: 'B6', name: 'Flexkamer Zuid', status: 'optie', from: '1 nov 2026', text: 'Kleine kamer voor twee personen. Er ligt een optie tot 1 oktober.' },
+    TNO: { id: 'TZO', name: 'Trappenhuis Zuid-Oost' },
+    TNW: { id: 'TZW', name: 'Trappenhuis Zuid-West' },
+    WN: { id: 'WZ', name: 'Toiletten Zuid' },
+    VN: { id: 'VZ', name: 'Vergaderkamer Zuid' },
+    BN: { id: 'BZ', name: 'Boardroom Zuid' },
+  };
+
+  const mirrorNode = n => n === 'h325' ? 'h555' : n.replace(/^n/, 's');
+  const south = north.map(r => Object.assign({}, r, {
+    y: H - r.y - r.h, door: [r.door[0], H - r.door[1]], node: mirrorNode(r.node), south: true,
+  }, southOverride[r.id]));
+
+  const rooms = north.concat(south).map(r => {
+    const status = r.type === 'kantoor' ? r.status : r.type;
+    const m2 = Math.round(r.w * r.h * M2_PER_UNIT);
+    return Object.assign(r, { status, m2, cx: r.x + r.w / 2, cy: r.y + r.h / 2 });
+  });
+  const byId = Object.fromEntries(rooms.map(r => [r.id, r]));
+
+  // ---- Looproutes (gangen) ----
+  const nodes = { lift: [400, 440], hall: [285, 440], h325: [285, 325], h555: [285, 555] };
+  const chainX = [70, 170, 285, 315, 400, 555, 600, 670, 755, 855, 885, 930];
+  chainX.forEach(x => { nodes['n' + x] = [x, 200]; nodes['s' + x] = [x, 680]; });
+  const adj = {};
+  const link = (a, b) => { (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); };
+  for (let i = 1; i < chainX.length; i++) { link('n' + chainX[i - 1], 'n' + chainX[i]); link('s' + chainX[i - 1], 's' + chainX[i]); }
+  link('n285', 'h325'); link('h325', 'hall'); link('hall', 'h555'); link('h555', 's285'); link('hall', 'lift');
+
+  function route(from, to) {
+    const prev = { [from]: null }, q = [from];
+    while (q.length) {
+      const c = q.shift();
+      if (c === to) break;
+      for (const n of adj[c] || []) if (!(n in prev)) { prev[n] = c; q.push(n); }
+    }
+    const path = []; let c = to;
+    while (c) { path.unshift(c); c = prev[c]; }
+    return path;
+  }
+
+  // ---- SVG tekenen ----
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  const gBase = document.getElementById('g-base');
+  const gRooms = document.getElementById('g-rooms');
+  const gWalls = document.getElementById('g-walls');
+  const gTrail = document.getElementById('g-trail');
+  const gVisitor = document.getElementById('g-visitor');
+
+  const outline = '40,60 960,60 960,320 470,320 470,560 960,560 960,820 40,820';
+  el('polygon', { points: outline, class: 'corr' }, gBase);
+  el('rect', { x: 470, y: 320, width: 490, height: 240, class: 'void' }, gBase);
+  el('text', { x: 715, y: 444, 'text-anchor': 'middle', class: 'void-label' }, gBase).textContent = 'VIDE · BINNENTUIN';
+  el('text', { x: 660, y: 204, 'text-anchor': 'middle', class: 'corr-label' }, gBase).textContent = 'GANG NOORD';
+  el('text', { x: 660, y: 684, 'text-anchor': 'middle', class: 'corr-label' }, gBase).textContent = 'GANG ZUID';
+
+  // Kern: liften en trap
+  const core = el('g', {}, gBase);
+  el('rect', { x: 330, y: 300, width: 140, height: 280, style: 'fill:var(--floor);stroke:var(--wall);stroke-width:2' }, core);
+  for (const y0 of [305, 535]) for (let i = 0; i < 8; i++) el('line', { x1: 340 + i * 15, y1: y0, x2: 340 + i * 15, y2: y0 + 40, class: 'furn' }, core);
+  for (const y0 of [355, 465]) for (const x0 of [345, 405]) {
+    el('rect', { x: x0, y: y0, width: 50, height: 60, class: 'furn' }, core);
+    el('line', { x1: x0, y1: y0, x2: x0 + 50, y2: y0 + 60, class: 'furn' }, core);
+    el('line', { x1: x0 + 50, y1: y0, x2: x0, y2: y0 + 60, class: 'furn' }, core);
+  }
+  el('rect', { x: 330, y: 420, width: 8, height: 40, class: 'door' }, core);
+  el('text', { x: 400, y: 444, 'text-anchor': 'middle', class: 'corr-label' }, core).textContent = 'LIFTEN';
+
+  // Receptiebalies in de hal
+  for (const y of [250, 600]) el('rect', { x: 300, y: y, width: 18, height: 34, rx: 3, class: 'furn solid' }, gBase);
+
+  // Buitenmuur en schaalbalk
+  el('polygon', { points: outline, class: 'wall-outer' }, gWalls);
+  const sb = el('g', { class: 'scalebar' }, gBase);
+  el('line', { x1: 40, y1: 836, x2: 240, y2: 836 }, sb);
+  for (const x of [40, 140, 240]) el('line', { x1: x, y1: 831, x2: x, y2: 841 }, sb);
+  el('text', { x: 40, y: 853, 'text-anchor': 'middle' }, sb).textContent = '0';
+  el('text', { x: 140, y: 853, 'text-anchor': 'middle' }, sb).textContent = '5 m';
+  el('text', { x: 240, y: 853, 'text-anchor': 'middle' }, sb).textContent = '10 m';
+
+  function drawFurniture(r, g) {
+    const top = r.south ? r.y + 8 : r.y + 34;
+    const bot = r.south ? r.y + r.h - 34 : r.y + r.h - 8;
+    const fx = r.x + 8, fw = r.w - 16, fh = bot - top, mx = r.x + r.w / 2, my = top + fh / 2;
+    const chair = (x, y) => el('circle', { cx: x, cy: y, r: 3.2, class: 'furn' }, g);
+    switch (r.furn) {
+      case 'desks': {
+        const n = 4, cw = 52, ch = 60, gap = (fw - n * cw) / (n + 1);
+        for (let i = 0; i < n; i++) {
+          const x0 = fx + gap + i * (cw + gap), y0 = my - ch / 2;
+          for (let c = 0; c < 2; c++) for (let rr = 0; rr < 3; rr++) {
+            el('rect', { x: x0 + 8 + c * 18, y: y0 + rr * 20, width: 18, height: 20, class: 'furn' }, g);
+            chair(c ? x0 + 48 : x0 + 3, y0 + rr * 20 + 10);
+          }
+        }
+        break;
+      }
+      case 'oval': {
+        const rx = Math.min(fw * 0.3, 36), ry = Math.min(fh * 0.22, 13);
+        el('ellipse', { cx: mx, cy: my, rx, ry, class: 'furn' }, g);
+        for (const s of [-1, 1]) for (const k of [-0.55, 0, 0.55]) chair(mx + k * rx, my + s * (ry + 6));
+        chair(mx - rx - 6, my); chair(mx + rx + 6, my);
+        break;
+      }
+      case 'round':
+        for (const dx of [-0.24, 0.12]) {
+          const cx = r.x + r.w * (0.5 + dx), cy = my;
+          el('circle', { cx, cy, r: 11, class: 'furn' }, g);
+          chair(cx - 17, cy); chair(cx + 17, cy); chair(cx, cy - 17); chair(cx, cy + 17);
+        }
+        el('rect', { x: r.x + r.w - 30, y: top + 2, width: 20, height: fh - 4, class: 'furn' }, g);
+        break;
+      case 'small':
+      case 'duo':
+        for (const k of (r.furn === 'small' ? [0.25, 0.62] : [0.32])) {
+          el('rect', { x: r.x + r.w * k, y: my - 9, width: 34, height: 18, class: 'furn' }, g);
+          chair(r.x + r.w * k + 17, r.south ? my - 15 : my + 15);
+        }
+        break;
+      case 'exec':
+        el('rect', { x: fx + 6, y: my - 10, width: 48, height: 20, class: 'furn' }, g);
+        chair(fx + 30, r.south ? my - 16 : my + 16);
+        el('rect', { x: fx + 72, y: my - 12, width: 18, height: 34, rx: 4, class: 'furn' }, g);
+        el('rect', { x: r.x + r.w - 34, y: top, width: 26, height: fh, class: 'furn' }, g);
+        break;
+      case 'u': {
+        const w = 74, h = Math.min(fh - 20, 140), x0 = mx - w / 2, y0 = my - h / 2, t = 18;
+        const d = r.south
+          ? `M${x0},${y0 + h} V${y0} H${x0 + w} V${y0 + h} H${x0 + w - t} V${y0 + t} H${x0 + t} V${y0 + h} Z`
+          : `M${x0},${y0} V${y0 + h} H${x0 + w} V${y0} H${x0 + w - t} V${y0 + h - t} H${x0 + t} V${y0} Z`;
+        el('path', { d, class: 'furn' }, g);
+        for (let i = 0; i < 6; i++) { const y = y0 + 12 + i * (h - 24) / 5; chair(x0 - 7, y); chair(x0 + w + 7, y); }
+        break;
+      }
+      case 'wc':
+        for (let i = 0; i < 4; i++) el('rect', { x: fx + 4 + i * 32, y: r.south ? bot - 22 : top, width: 26, height: 22, class: 'furn' }, g);
+        break;
+      case 'pantry':
+        el('rect', { x: fx, y: top, width: 14, height: fh, class: 'furn' }, g);
+        el('circle', { cx: mx + 8, cy: my, r: 9, class: 'furn' }, g);
+        break;
+      case 'stair':
+        for (let i = 0; i < 7; i++) { const y = top + 4 + i * (fh - 8) / 6; el('line', { x1: fx + 4, y1: y, x2: fx + fw - 4, y2: y, class: 'furn' }, g); }
+        break;
+    }
+  }
+
+  const roomEls = {};
+  rooms.forEach(r => {
+    const g = el('g', { class: 'room st-' + r.status, tabindex: 0, role: 'button', 'aria-label': `${r.id} ${r.name}, ${statusLabel(r.status)}` }, gRooms);
+    el('rect', { x: r.x, y: r.y, width: r.w, height: r.h, class: 'rf' }, g);
+    drawFurniture(r, g);
+    const ly = r.south ? r.y + r.h - 22 : r.y + 16;
+    el('text', { x: r.x + 8, y: ly, class: 'code' }, g).textContent = r.type === 'algemeen' ? '' : r.id;
+    const label = r.furn === 'stair' ? 'Trap' : r.w < 100 ? r.name.split(' ')[0] : r.name;
+    el('text', { x: r.x + 8, y: ly + 13, class: 'rname' }, g).textContent = label;
+    // deuropening in de wand
+    const [dx, dy] = r.door, vertical = dx === r.x || dx === r.x + r.w;
+    el('rect', vertical ? { x: dx - 2, y: dy - 12, width: 4, height: 24, class: 'door' } : { x: dx - 12, y: dy - 2, width: 24, height: 4, class: 'door' }, gWalls);
+    g.addEventListener('click', () => { stopTourIfOutside(r.id); goTo(r.id); });
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stopTourIfOutside(r.id); goTo(r.id); } });
+    roomEls[r.id] = g;
+  });
+
+  // ---- Bezoeker ----
+  const halo = el('circle', { r: 14, class: 'visitor-halo' }, gVisitor);
+  const dot = el('circle', { r: 7, class: 'visitor-dot' }, gVisitor);
+  let pos = nodes.lift.slice(), here = { room: null, node: 'lift' }, anim = null;
+  function place(p) { for (const c of [halo, dot]) { c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); } }
+  place(pos);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function walk(points, done) {
+    if (anim) cancelAnimationFrame(anim);
+    gTrail.innerHTML = '';
+    el('polyline', { points: points.map(p => p.join(',')).join(' '), class: 'trail' }, gTrail);
+    const segs = []; let total = 0;
+    for (let i = 1; i < points.length; i++) {
+      const l = Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]);
+      segs.push(l); total += l;
+    }
+    if (reduceMotion || total < 1) { pos = points[points.length - 1]; place(pos); done && done(total); return total; }
+    const dur = Math.min(2600, 350 + total * 2.6), t0 = performance.now();
+    const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const step = now => {
+      const t = Math.min(1, (now - t0) / dur);
+      let d = ease(t) * total, i = 0;
+      while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
+      const a = points[i], b = points[i + 1], f = segs[i] ? Math.min(1, d / segs[i]) : 1;
+      pos = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+      place(pos);
+      if (t < 1) anim = requestAnimationFrame(step); else { anim = null; done && done(total); }
+    };
+    anim = requestAnimationFrame(step);
+    return total;
+  }
+
+  function pathLength(pts) { let l = 0; for (let i = 1; i < pts.length; i++) l += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return l; }
+  function roomTarget(r) { return r.furn === 'stair' ? [r.cx, r.cy] : [r.cx, r.south ? r.y + r.h - 16 : r.y + 20]; }
+  function pointsTo(targetNode, targetRoom) {
+    const pts = [pos.slice()];
+    if (here.room) { const cur = byId[here.room]; pts.push(cur.door); }
+    route(here.node, targetNode).forEach(n => pts.push(nodes[n]));
+    if (targetRoom) { pts.push(targetRoom.door, [targetRoom.door[0], targetRoom.south ? targetRoom.door[1] - 22 : targetRoom.door[1] + 22]); }
+    return pts;
+  }
+  function distanceFromLift(r) {
+    const pts = [nodes.lift]; route('lift', r.node).forEach(n => pts.push(nodes[n])); pts.push(r.door);
+    return Math.round(pathLength(pts) * M_PER_UNIT);
+  }
+
+  let selected = null;
+  function goTo(id) {
+    const r = byId[id];
+    if (selected) roomEls[selected].classList.remove('selected');
+    selected = id; roomEls[id].classList.add('selected');
+    walk(pointsTo(r.node, r));
+    here = { room: id, node: r.node };
+    renderRoom(r);
+  }
+  function goLift() {
+    if (selected) roomEls[selected].classList.remove('selected');
+    selected = null;
+    walk(pointsTo('lift', null));
+    here = { room: null, node: 'lift' };
+    renderOverview();
+  }
+
+  // ---- Paneel ----
+  const panel = document.getElementById('panel');
+  const eur = n => '€ ' + Math.round(n).toLocaleString('nl-NL');
+  function statusLabel(s) { return { vrij: 'Vrij', optie: 'Onder optie', verhuurd: 'Verhuurd', gedeeld: 'Gedeeld', algemeen: 'Algemene ruimte' }[s]; }
+  const rentable = rooms.filter(r => r.type === 'kantoor');
+  const available = rentable.filter(r => r.status === 'vrij' || r.status === 'optie');
+
+  let shortlist = [];
+  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist') || '[]').filter(id => byId[id]); } catch (e) { shortlist = []; }
+  function saveShortlist() { try { localStorage.setItem('plattegrond-shortlist', JSON.stringify(shortlist)); } catch (e) {} }
+
+  function renderSummary() {
+    const vrij = rentable.filter(r => r.status === 'vrij');
+    const m2 = vrij.reduce((s, r) => s + r.m2, 0), seats = vrij.reduce((s, r) => s + r.seats, 0);
+    document.getElementById('summary').innerHTML =
+      `<span><b>${vrij.length}</b> van ${rentable.length} kantoorruimtes vrij</span>` +
+      `<span><b>${m2} m²</b> direct of binnenkort beschikbaar</span>` +
+      `<span><b>${seats}</b> werkplekken</span>`;
+  }
+
+  function listRow(r) {
+    return `<button class="list-row" data-go="${r.id}">
+      <span class="c" style="color:var(--${r.status})">${r.id}</span>
+      <span><span class="n">${r.name}</span><br><span class="m">${r.m2} m² · ${r.seats} plekken · ${r.status === 'optie' ? 'onder optie' : 'vrij ' + (r.from === 'direct' ? 'direct' : 'per ' + r.from)}</span></span>
+      <span class="p">${eur(r.m2 * RENT)}<br><span class="m">p/mnd</span></span>
+    </button>`;
+  }
+
+  function renderOverview() {
+    const sl = shortlist.map(id => byId[id]);
+    panel.innerHTML = `
+      <div class="eyebrow">U staat bij de liften</div>
+      <h2>Welke ruimte wilt u bekijken?</h2>
+      <p>Klik op een ruimte in de plattegrond om erheen te lopen, of start de rondleiding langs alle ruimtes die vrij of onder optie zijn.</p>
+      <h3>Beschikbaar (${available.length})</h3>
+      <div class="list">${available.map(listRow).join('')}</div>
+      ${sl.length ? `<h3>Mijn shortlist <span class="shortlist-count">(${sl.length})</span></h3>
+        <div class="list">${sl.map(listRow).join('')}</div>
+        <p class="note">Samen ${sl.reduce((s, r) => s + r.m2, 0)} m², ${sl.reduce((s, r) => s + r.seats, 0)} werkplekken, ${eur(sl.reduce((s, r) => s + r.m2, 0) * RENT)} huur per maand.</p>` : ''}
+    `;
+    bindPanel();
+  }
+
+  function renderRoom(r) {
+    const isRent = r.type === 'kantoor';
+    const onList = shortlist.includes(r.id);
+    const t = tour.active ? `<div class="eyebrow">Rondleiding · stop ${tour.i + 1} van ${tour.list.length}</div>` : `<div class="eyebrow">${r.type === 'algemeen' ? 'Algemene ruimte' : r.id} · ${r.south ? 'zuidvleugel' : 'noordvleugel'}</div>`;
+    let stats = '';
+    if (isRent) {
+      stats = `<div class="stats">
+        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+        <div class="stat"><span class="k">Werkplekken</span><span class="v">${r.seats}</span></div>
+        <div class="stat"><span class="k">Huur per maand</span><span class="v">${eur(r.m2 * RENT)}</span></div>
+        <div class="stat"><span class="k">Servicekosten</span><span class="v">${eur(r.m2 * SERVICE)}</span></div>
+        <div class="stat"><span class="k">Beschikbaar</span><span class="v">${r.status === 'verhuurd' ? '—' : (r.from === 'direct' ? 'Direct' : r.from)}</span></div>
+        <div class="stat"><span class="k">Lopen vanaf lift</span><span class="v">${distanceFromLift(r)} m</span></div>
+      </div>`;
+    } else if (r.seats) {
+      stats = `<div class="stats">
+        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+        <div class="stat"><span class="k">Personen</span><span class="v">${r.seats}</span></div>
+      </div>`;
+    }
+    panel.innerHTML = `
+      ${t}
+      <h2>${r.name}</h2>
+      <span class="pill ${r.status}"><span class="dot" style="background:currentColor"></span>${statusLabel(r.status)}</span>
+      ${stats}
+      <p>${r.text}</p>
+      <div class="actions">
+        ${isRent && r.status !== 'verhuurd' ? `<button class="btn${onList ? ' ghost' : ''}" id="toggle-list">${onList ? 'Van shortlist halen' : 'Op mijn shortlist'}</button>` : ''}
+        <button class="btn ghost" id="back">Terug naar lift</button>
+      </div>
+    `;
+    const tl = document.getElementById('toggle-list');
+    if (tl) tl.addEventListener('click', () => {
+      shortlist = onList ? shortlist.filter(x => x !== r.id) : shortlist.concat(r.id);
+      saveShortlist(); renderRoom(r);
+    });
+    document.getElementById('back').addEventListener('click', () => { endTour(); goLift(); });
+  }
+
+  function bindPanel() {
+    panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.go)));
+  }
+
+  // ---- Filter ----
+  let filter = 'alle';
+  document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    rooms.forEach(r => roomEls[r.id].classList.toggle('dim', filter !== 'alle' && r.status !== filter));
+  }));
+
+  // ---- Rondleiding ----
+  const order = chainX.flatMap(x => ['n' + x]).concat(chainX.slice().reverse().map(x => 's' + x));
+  const tour = { active: false, i: 0, list: [] };
+  const tourbar = document.getElementById('tourbar');
+  function showStop() {
+    document.getElementById('tour-step').textContent = `Stop ${tour.i + 1} van ${tour.list.length} · ${byId[tour.list[tour.i]].name}`;
+    document.getElementById('tour-prev').disabled = tour.i === 0;
+    document.getElementById('tour-next').textContent = tour.i === tour.list.length - 1 ? 'Afronden' : 'Volgende →';
+    goTo(tour.list[tour.i]);
+  }
+  function endTour() { tour.active = false; tourbar.hidden = true; }
+  function stopTourIfOutside(id) { if (tour.active && tour.list[tour.i] !== id) { const k = tour.list.indexOf(id); if (k >= 0) { tour.i = k; showStopBar(); } else endTour(); } }
+  function showStopBar() { document.getElementById('tour-step').textContent = `Stop ${tour.i + 1} van ${tour.list.length} · ${byId[tour.list[tour.i]].name}`; document.getElementById('tour-prev').disabled = tour.i === 0; }
+  document.getElementById('tour-start').addEventListener('click', () => {
+    tour.list = available.slice().sort((a, b) => order.indexOf(a.node) - order.indexOf(b.node)).map(r => r.id);
+    tour.i = 0; tour.active = true; tourbar.hidden = false; showStop();
+  });
+  document.getElementById('tour-prev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; showStop(); } });
+  document.getElementById('tour-next').addEventListener('click', () => {
+    if (tour.i < tour.list.length - 1) { tour.i++; showStop(); } else { endTour(); goLift(); }
+  });
+  document.getElementById('tour-stop').addEventListener('click', () => { endTour(); goLift(); });
+  document.getElementById('to-lift').addEventListener('click', () => { endTour(); goLift(); });
+
+  renderSummary();
+  renderOverview();
+})();
+</script>
+</body>
+</html>

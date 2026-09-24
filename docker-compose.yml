@@ -1,0 +1,8 @@
+services:
+  floorloper:
+    build: .
+    image: floorloper:latest
+    container_name: floorloper
+    ports:
+      - "8791:80"
+    restart: unless-stopped
