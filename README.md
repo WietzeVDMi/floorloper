@@ -5,6 +5,10 @@ Interactieve rondleiding door een kantoorverdieping voor toekomstige huurders. J
 - `index.html`: 3D-weergave (Three.js). Bekijk de verdieping van bovenaf of loop rond op ooghoogte.
 - `plattegrond.html`: platte 2D-plattegrond met dezelfde gegevens.
 
+## Het gebouw
+
+De buitenkant is geïnspireerd op de kantoortoren van The Pulse of Amsterdam op de Zuidas (MVSA Architects): een toren van 24 verdiepingen met een champagnekleurige gevel van kaders van 3,6 × 3,8 m. Hoe hoger, hoe dieper en schuiner de erkers; het glas kijkt iets naar beneden en op het schuine erkerdak liggen zonnepanelen. De verdieping ligt op de 12e verdieping; daaronder is het gebouw breder, zodat de binnentuin een dakterras is. Rondom staan een woontoren met oranje baksteen en verspringende volumes, een stadsbos en Zuidas-torens. In de 3D-weergave toont de knop **Gebouw** de toren van buiten.
+
 ## Concept
 
 De verdieping is ingericht als flexibel kantoorconcept met hospitality voorop, naar het model van aanbieders als Co-Office:

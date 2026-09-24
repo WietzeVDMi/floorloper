@@ -154,7 +154,7 @@
 <div class="wrap">
   <header>
     <div>
-      <div class="eyebrow">Flexibele kantoorverdieping · 3e etage · alles all-in</div>
+      <div class="eyebrow">Flexibele kantoorverdieping · 12e van 24 verdiepingen · alles all-in</div>
       <h1>Loop door de verdieping</h1>
     </div>
     <div class="summary" id="summary"></div>
@@ -178,6 +178,7 @@
       <div class="hud modes" role="group" aria-label="Weergave">
         <button class="mode" id="m-over" aria-pressed="true">Van boven</button>
         <button class="mode" id="m-walk" aria-pressed="false">Rondlopen</button>
+        <button class="mode" id="m-ext" aria-pressed="false">Gebouw</button>
       </div>
       <div class="hud where" id="where"></div>
       <div class="hud minimap"><canvas id="mini" width="376" height="312" aria-label="Minikaart, klik om erheen te lopen"></canvas></div>
@@ -510,8 +511,8 @@
 
   const scene = new THREE.Scene();
   const HORIZON = 0xd9e1e6;
-  scene.fog = new THREE.Fog(HORIZON, 90, 420);
-  const camera = new THREE.PerspectiveCamera(50, 1, 0.08, 900);
+  scene.fog = new THREE.Fog(HORIZON, 150, 750);
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.08, 2200);
   camera.rotation.order = 'YXZ';
 
   // Omgevingslicht voor zachte reflecties
@@ -538,7 +539,7 @@
   sun.target.position.set(25, 0, 22);
   sun.castShadow = true;
   sun.shadow.mapSize.set(lowEnd ? 2048 : 4096, lowEnd ? 2048 : 4096);
-  Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 140 });
+  Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 48, bottom: -48, near: 1, far: 200 });
   sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
   scene.add(sun, sun.target);
 
@@ -659,32 +660,151 @@
     (parent || world).add(grp); return grp;
   }
 
-  // ---------- Omgeving: gebouw, straten en stad ----------
-  const FLOOR_Y = -10.5;                                 // derde verdieping
-  const outline = [[40, 60], [960, 60], [960, 320], [470, 320], [470, 560], [960, 560], [960, 820], [40, 820]];
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1600), M.ground);
-  ground.rotation.x = -Math.PI / 2; ground.position.set(25, FLOOR_Y, 22); ground.receiveShadow = true; scene.add(ground);
-  [[25, 22 - 32, 400, 14], [25, 22 + 34, 400, 14], [25 - 36, 22, 14, 400], [25 + 42, 22, 14, 400]].forEach(([x, z, w, d]) => {
-    const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.road); r.rotation.x = -Math.PI / 2; r.position.set(x, FLOOR_Y + 0.02, z); r.receiveShadow = true; scene.add(r);
-  });
-  // eigen gebouw onder de verdieping
-  const bodyShape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x * U, -y * U)));
-  const buildingBody = new THREE.Mesh(new THREE.ExtrudeGeometry(bodyShape, { depth: -FLOOR_Y - 0.06, bevelEnabled: false }), M.building);
-  buildingBody.rotation.x = -Math.PI / 2; buildingBody.position.y = FLOOR_Y; buildingBody.castShadow = buildingBody.receiveShadow = true; scene.add(buildingBody);
-  // stad rondom, met ramen
   const cityWin = canvasTex(256, (g, s) => {
     g.fillStyle = '#8e9296'; g.fillRect(0, 0, s, s);
     for (let y = 0; y < 16; y++) for (let x = 0; x < 8; x++) { const l = rnd(); g.fillStyle = l > .85 ? '#e9dcc0' : l > .4 ? '#5d6f7f' : '#46545f'; g.fillRect(x * 32 + 5, y * 16 + 3, 22, 10); }
   });
-  (function city() {
-    const cityMat = [0xa7a39c, 0xc4bdb2, 0x8f949a, 0xb3aea4].map(c => mat(c, { map: cityWin, roughness: .8 }));
+  // ---------- Toren in de stijl van The Pulse (Zuidas) ----------
+  // Champagnekleurige kaders van 3,6 × 3,8 m; hoe hoger, hoe dieper en schuiner de erker,
+  // met zonnepanelen op het schuine erkerdak en glas dat naar beneden kijkt.
+  const FH = 3.8, OUR = 12, TOP = 24;
+  const FLOOR_Y = -OUR * FH;
+  const outline = [[40, 60], [960, 60], [960, 320], [470, 320], [470, 560], [960, 560], [960, 820], [40, 820]];
+  const rectOutline = [[40, 60], [960, 60], [960, 820], [40, 820]];
+  const aboveGroup = new THREE.Group(), belowGroup = new THREE.Group();
+  scene.add(aboveGroup, belowGroup);
+  M.champagne = mat(0xcdc1ab, { roughness: .42, metalness: .3, envMapIntensity: .7 });
+  M.champagneDark = mat(0x9f937e, { roughness: .5, metalness: .3 });
+  M.pv = mat(0x161c28, { roughness: .18, metalness: .7, envMapIntensity: 1.1 });
+  M.towerGlass = mat(0x34434e, { roughness: .05, metalness: .9, envMapIntensity: 1.4, side: THREE.DoubleSide });
+  M.ourGlass = new THREE.MeshStandardMaterial({ color: 0xcfe0e6, transparent: true, opacity: .14, roughness: .02, metalness: .2, envMapIntensity: 1.5, depthWrite: false, side: THREE.DoubleSide });
+  M.brick = mat(0xffffff, { map: canvasTex(512, (g, s) => {
+    g.fillStyle = '#b8653a'; g.fillRect(0, 0, s, s);
+    for (let y = 0; y < s; y += 8) for (let x = (y / 8) % 2 ? -12 : 0; x < s; x += 24) { const l = 38 + rnd() * 10; g.fillStyle = `hsl(${18 + rnd() * 6}, 52%, ${l}%)`; g.fillRect(x + 1, y + 1, 22, 6); }
+    for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 4; fx++) { g.fillStyle = '#2d2a28'; g.fillRect(fx * 128 + 30, fy * 128 + 26, 68, 80); g.fillStyle = 'rgba(160,190,210,.35)'; g.fillRect(fx * 128 + 34, fy * 128 + 30, 60, 30); }
+  }), roughness: .9 });
+
+  const quad = (a, b, c, d) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([...a, ...b, ...c, ...a, ...c, ...d], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2));
+    g.computeVertexNormals(); return g;
+  };
+  const boxAt = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z).toNonIndexed();
+  const mergeGeo = gs => THREE.BufferGeometryUtils.mergeBufferGeometries(gs.map(g => { g = g.index ? g.toNonIndexed() : g; for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k); return g; }));
+  const designs = [];
+  for (let k = 0; k < 17; k++) {
+    const W = 3.6, b = 0.2, D = 0.3 + k * 0.075, zB = 0.12, yB = 0.4, yT = FH - b - (0.35 + k * 0.05);
+    designs.push({
+      D,
+      frame: mergeGeo([
+        boxAt(b, FH, D + 0.04, -W / 2 + b / 2, FH / 2, (D + 0.04) / 2), boxAt(b, FH, D + 0.04, W / 2 - b / 2, FH / 2, (D + 0.04) / 2),
+        boxAt(W, b, D + 0.04, 0, FH - b / 2, (D + 0.04) / 2), boxAt(W, yB, D + 0.04, 0, yB / 2, (D + 0.04) / 2),
+      ]),
+      glass: quad([-W / 2 + b, yB, zB], [W / 2 - b, yB, zB], [W / 2 - b, yT, D - 0.04], [-W / 2 + b, yT, D - 0.04]),
+      pv: quad([-W / 2 + b, yT, D - 0.04], [W / 2 - b, yT, D - 0.04], [W / 2 - b, FH - b, zB], [-W / 2 + b, FH - b, zB]),
+      side: mergeGeo([                                // dichte zijwangen van de erker
+        quad([-W / 2 + b, yB, 0], [-W / 2 + b, yB, zB], [-W / 2 + b, yT, D - 0.04], [-W / 2 + b, FH - b, 0]),
+        quad([W / 2 - b, FH - b, 0], [W / 2 - b, yT, D - 0.04], [W / 2 - b, yB, zB], [W / 2 - b, yB, 0]),
+      ]),
+    });
+  }
+  const designFor = f => designs[Math.max(0, Math.min(16, Math.round((f - 1) / (TOP - 2) * 16)))];
+  function facade(poly, floors, parent, glassMat) {
+    const byDesign = new Map(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+    floors.forEach(f => {
+      const des = designFor(f), y = (f - OUR) * FH;
+      poly.forEach((a, i) => {
+        const b = poly[(i + 1) % poly.length], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+        const n = Math.max(1, Math.round(len * U / 3.6)), w = len * U / n;
+        q.setFromAxisAngle(up, Math.atan2(dy / len, -dx / len));
+        for (let j = 0; j < n; j++) {
+          const m = new THREE.Matrix4().compose(new THREE.Vector3((a[0] + dx * (j + .5) / n) * U, y, (a[1] + dy * (j + .5) / n) * U), q, new THREE.Vector3(w / 3.6, 1, 1));
+          if (!byDesign.has(des)) byDesign.set(des, []);
+          byDesign.get(des).push(m);
+        }
+      });
+    });
+    for (const [des, ms] of byDesign) {
+      for (const [geo, m, cast] of [[des.frame, M.champagne, true], [des.side, M.champagneDark, true], [des.glass, glassMat, false], [des.pv, M.pv, true]]) {
+        const im = new THREE.InstancedMesh(geo, m, ms.length);
+        ms.forEach((mm, i) => im.setMatrixAt(i, mm));
+        im.castShadow = cast; im.receiveShadow = true; if (m.transparent) im.renderOrder = 2;
+        parent.add(keep(im));
+        if (m === M.ourGlass) glassMeshes.push(im);
+      }
+    }
+    // hoekkolommen
+    poly.forEach(([x, y]) => { const c = box(x - 5, y - 5, 10, 10, floors.length * FH, (floors[0] - OUR) * FH, M.champagne, parent); keep(c); });
+  }
+  facade(rectOutline, Array.from({ length: OUR - 1 }, (_, i) => i + 1), belowGroup, M.towerGlass);
+  facade(outline, [OUR], tall, M.ourGlass);
+  facade(outline, Array.from({ length: TOP - OUR - 1 }, (_, i) => OUR + 1 + i), aboveGroup, M.towerGlass);
+  // vloerranden tussen de verdiepingen (zichtbaar door het glas)
+  const slabShapeU = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x * U, -y * U)));
+  const slabShapeR = new THREE.Shape(rectOutline.map(([x, y]) => new THREE.Vector2(x * U, -y * U)));
+  function towerSlab(shapeObj, y, parent, h = 0.35, m = M.champagneDark) {
+    const s = new THREE.Mesh(new THREE.ExtrudeGeometry(shapeObj, { depth: h, bevelEnabled: false }), m);
+    s.rotation.x = -Math.PI / 2; s.position.y = y - h; s.castShadow = s.receiveShadow = true; parent.add(keep(s)); return s;
+  }
+  towerSlab(slabShapeU, WALL_H + 0.8, aboveGroup, 0.8, M.building);                       // plafond boven onze verdieping
+  for (let f = OUR + 1; f <= TOP; f++) towerSlab(slabShapeU, (f - OUR) * FH + 0.02, aboveGroup, 0.4, mat(0x2a2f33));
+  for (let f = 1; f < OUR; f++) towerSlab(slabShapeR, (f - OUR) * FH + 0.02, belowGroup, 0.4, mat(0x2a2f33));
+  // plint: hoge glazen pui met luifel
+  const plinthH = FH;
+  box(40, 60, 920, 760, plinthH - 0.2, FLOOR_Y, mat(0x2b3339, { roughness: .1, metalness: .8, envMapIntensity: 1.3 }), belowGroup);
+  for (let x = 40; x <= 960; x += 72) { keep(box(x - 3, 54, 6, 6, plinthH, FLOOR_Y, M.champagne, belowGroup)); keep(box(x - 3, 820, 6, 6, plinthH, FLOOR_Y, M.champagne, belowGroup)); }
+  keep(box(20, 30, 960, 30, 0.3, FLOOR_Y + plinthH - 0.3, M.champagne, belowGroup)); keep(box(20, 820, 960, 40, 0.3, FLOOR_Y + plinthH - 0.3, M.champagne, belowGroup));
+  // dak: kroon, zonnepanelen en installaties
+  const roofY = (TOP - OUR) * FH;
+  towerSlab(slabShapeU, roofY + 0.4, aboveGroup, 0.4, M.champagneDark);
+  outline.forEach((a, i) => { const b = outline[(i + 1) % outline.length]; const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]); keep(box(x - 3, y - 3, Math.abs(b[0] - a[0]) + 6, Math.abs(b[1] - a[1]) + 6, 1.8, roofY + 0.4, M.champagne, aboveGroup)); });
+  (function roofPV() {
+    const geo = new THREE.BoxGeometry(1.7, 0.04, 1.0), ms = [];
+    for (let x = 80; x < 440; x += 40) for (let y = 100; y < 780; y += 26) ms.push(new THREE.Matrix4().compose(new THREE.Vector3(x * U, roofY + 0.9, y * U), new THREE.Quaternion().setFromEuler(new THREE.Euler(0.35, 0, 0)), new THREE.Vector3(1, 1, 1)));
+    for (let x = 500; x < 930; x += 40) for (const y0 of [100, 600]) for (let y = y0; y < y0 + 200; y += 26) ms.push(new THREE.Matrix4().compose(new THREE.Vector3(x * U, roofY + 0.9, y * U), new THREE.Quaternion().setFromEuler(new THREE.Euler(0.35, 0, 0)), new THREE.Vector3(1, 1, 1)));
+    const im = new THREE.InstancedMesh(geo, M.pv, ms.length); ms.forEach((m, i) => im.setMatrixAt(i, m)); im.castShadow = true; aboveGroup.add(keep(im));
+    keep(box(300, 380, 160, 120, 3.2, roofY + 0.4, M.champagneDark, aboveGroup));
+  })();
+  // dakterras op de lagere verdiepingen, met glazen balustrade
+  keep(box(958, 320, 3, 240, 1.1, 0, M.ourGlass, tall, false)).renderOrder = 2;
+  keep(box(957, 320, 5, 240, 0.06, 1.1, M.champagne, tall));
+  box(470, 320, 490, 240, 0.4, -0.4, M.building, belowGroup, false);
+
+  // Straten, stadsbos en de Zuidas eromheen
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1600), M.ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.set(25, FLOOR_Y, 22); ground.receiveShadow = true; scene.add(ground);
+  [[25, -14, 500, 12], [25, 60, 500, 12], [-38, 22, 12, 500], [88, 22, 12, 500]].forEach(([x, z, w, d]) => {
+    const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.road); r.rotation.x = -Math.PI / 2; r.position.set(x, FLOOR_Y + 0.02, z); r.receiveShadow = true; scene.add(r);
+  });
+  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(70, 30), M.grass); lawn.rotation.x = -Math.PI / 2; lawn.position.set(12, FLOOR_Y + 0.03, 78); lawn.receiveShadow = true; scene.add(lawn);
+  // woontoren met oranje baksteen en verspringende volumes
+  (function residentialTower() {
+    const g = new THREE.Group(); let y = FLOOR_Y;
+    const blocks = [[26, 22, 12, 0, 0], [24, 21, 14, 1.5, -1], [25, 20, 14, -1.2, 1.2], [23, 21, 14, 1, 0.6], [24, 19, 14, -0.8, -0.8], [21, 18, 12, 0.6, 0.4]];
+    blocks.forEach(([w, d, h, ox, oz]) => {
+      const m = M.brick.clone(); m.map = M.brick.map.clone(); m.map.needsUpdate = true; m.map.repeat.set(w / 12, h / 12);
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(ox, y + h / 2, oz); b.castShadow = b.receiveShadow = true; g.add(b);
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.4, 0.4, d + 0.4), M.champagneDark); cap.position.set(ox, y + h, oz); g.add(cap);
+      y += h;
+    });
+    g.position.set(-22, 0, 100); scene.add(g);
+  })();
+  (function zuidas() {
+    const glassy = [0x4d5f6c, 0x5d6a72, 0x3f4f5a].map(c => mat(c, { map: cityWin, roughness: .12, metalness: .8, envMapIntensity: 1.2 }));
+    const stone = [0xb9b2a6, 0xd0c8bb].map(c => mat(c, { map: cityWin, roughness: .8 }));
     const geo = new THREE.BoxGeometry(1, 1, 1);
-    for (let i = 0; i < 90; i++) {
-      const a = rnd() * Math.PI * 2, d = 70 + rnd() * 260, w = 14 + rnd() * 26, dd = 14 + rnd() * 26, h = 8 + rnd() * (d > 180 ? 110 : 55);
+    for (let i = 0; i < 70; i++) {
+      const a = rnd() * Math.PI * 2, d = 95 + rnd() * 280, w = 16 + rnd() * 24, dd = 16 + rnd() * 24;
+      const h = d < 150 ? 18 + rnd() * 40 : d < 240 ? 30 + rnd() * 80 : 15 + rnd() * 50;
       const x = 25 + Math.cos(a) * d, z = 22 + Math.sin(a) * d;
-      const m = new THREE.Mesh(geo, cityMat[i % 4]); m.scale.set(w, h, dd); m.position.set(x, FLOOR_Y + h / 2, z); m.rotation.y = Math.round(rnd()) * Math.PI / 2;
-      m.material = m.material.clone(); m.material.map = cityWin.clone(); m.material.map.needsUpdate = true; m.material.map.repeat.set(w / 12, h / 12);
-      m.receiveShadow = true; scene.add(m);
+      if (Math.hypot(x + 22, z - 100) < 40) continue;
+      const camA = Math.atan2(0.77, 0.62), da = Math.abs(Math.atan2(Math.sin(a - camA), Math.cos(a - camA)));
+      if (da < 0.7 && d < 300) continue;                          // zichtlijn naar de toren vrijhouden
+      const base = (rnd() > .45 ? glassy : stone)[i % 2], m = base.clone();
+      m.map = cityWin.clone(); m.map.needsUpdate = true; m.map.repeat.set(w / 12, h / 12);
+      const b = new THREE.Mesh(geo, m); b.scale.set(w, h, dd); b.position.set(x, FLOOR_Y + h / 2, z); b.rotation.y = Math.round(rnd()) * Math.PI / 2;
+      b.receiveShadow = true; scene.add(b);
     }
   })();
 
@@ -697,16 +817,27 @@
   box(500, 345, 430, 70, 0.08, 0, M.grass, world, false).receiveShadow = true;
   box(500, 465, 430, 70, 0.08, 0, M.grass, world, false).receiveShadow = true;
   box(480, 430, 470, 20, 0.03, 0.01, M.path, world, false).receiveShadow = true;
-  function tree(x, y, s) {
+  function tree(x, y, s, elev = 0) {
     const g = new THREE.Group();
     part(new THREE.CylinderGeometry(0.08 * s, 0.13 * s, 2.4 * s, 10), M.trunk, 0, 1.2 * s, 0, g);
     for (let i = 0; i < 7; i++) {
       const c = part(new THREE.IcosahedronGeometry((0.8 + rnd() * .5) * s, 1), i % 2 ? M.leaf : M.leaf2, (rnd() - .5) * 1.4 * s, (2.5 + rnd() * 1.4) * s, (rnd() - .5) * 1.4 * s, g);
       c.scale.y = .85;
     }
-    place(g, x, y);
+    place(g, x, y).position.y = elev;
   }
   [[540, 380], [640, 505], [760, 378], [880, 500], [840, 362], [600, 395]].forEach(([x, y], i) => tree(x, y, 0.95 + (i % 3) * .15));
+
+  (function forest() {                                   // stadsbos rond de voet van de toren
+    let n = 0, tries = 0;
+    while (n < 60 && tries++ < 2000) {
+      const X = -32 + rnd() * 115, Z = -24 + rnd() * 140;
+      if (X > -1 && X < 51 && Z > 0 && Z < 44) continue;
+      if (Math.abs(Z + 14) < 8 || Math.abs(Z - 60) < 8 || Math.abs(X + 38) < 8 || Math.abs(X - 88) < 8) continue;
+      if (Math.hypot(X + 22, Z - 100) < 20) continue;
+      tree(X / U, Z / U, 1.5 + rnd() * 1.1, FLOOR_Y); n++;
+    }
+  })();
 
   const ceilShape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x * U, y * U)));
   const ceilGeo = new THREE.ShapeGeometry(ceilShape);
@@ -840,29 +971,14 @@
   rooms.forEach(r => rectEdges(r.x, r.y, r.w, r.h, r.door, r));
   rectEdges(330, 300, 140, 280, [330, 440]);   // liftkern, open naar de hal
 
-  // Gevel: borstwering met vensterbank, glas, kozijnen en schuine kolommen
+  // Gevel van onze verdieping: borstwering en vensterbank binnen, de erkerkaders staan erbuiten
   outlineEdges.forEach(({ a, b, glass }) => {
     colSegs.push([a[0], a[1], b[0], b[1]]);
     if (!glass) return wallSeg(a[0], a[1], b[0], b[1]);
-    const horiz = a[1] === b[1], len = Math.abs(horiz ? b[0] - a[0] : b[1] - a[1]);
     const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]), y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
-    wallSeg(x1, y1, x2, y2, M.parapet, 0.5, 0, 3);
-    wallSeg(x1, y1, x2, y2, M.counter, 0.03, 0.5, 6);                 // vensterbank
-    wallSeg(x1, y1, x2, y2, M.frame, 0.35, WALL_H - 0.35, 3);
-    wallSeg(x1, y1, x2, y2, M.frame, 0.06, 0.5, 1.2);
-    const gh = WALL_H - 0.9;
-    const g = horiz ? new THREE.Mesh(new THREE.BoxGeometry(len * U, gh, 0.02), M.glass) : new THREE.Mesh(new THREE.BoxGeometry(0.02, gh, len * U), M.glass);
-    g.position.set((a[0] + b[0]) / 2 * U, 0.55 + gh / 2, (a[1] + b[1]) / 2 * U); g.renderOrder = 2; tall.add(g); glassMeshes.push(g);
-    // buitenkant: betonnen randen boven en onder
-    wallSeg(x1, y1, x2, y2, M.building, 0.35, WALL_H, 6);
-    const n = Math.round(len / 36);
-    for (let i = 0; i <= n; i++) {
-      const t = i / n, px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
-      if (i % 3 === 0) {                                              // schuine gevelkolom zoals op de foto's
-        const col = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, WALL_H, 4, 1), M.stone);
-        col.rotation.y = Math.PI / 4; col.position.set(px * U, WALL_H / 2, py * U); col.castShadow = col.receiveShadow = true; tall.add(col);
-      } else box(px - 0.8, py - 0.8, 1.6, 1.6, gh, 0.55, M.frame, tall);
-    }
+    wallSeg(x1, y1, x2, y2, M.parapet, 0.4, 0, 2);
+    wallSeg(x1, y1, x2, y2, M.counter, 0.03, 0.4, 5);
+    wallSeg(x1, y1, x2, y2, M.frame, 0.25, WALL_H - 0.25, 2);
   });
 
   // Liftkern
@@ -1220,7 +1336,7 @@
     try {
       composer = new THREE.EffectComposer(renderer);
       ssao = new THREE.SSAOPass(scene, camera, 800, 600);
-      ssao.kernelRadius = 0.5; ssao.minDistance = 0.000004; ssao.maxDistance = 0.0009;
+      ssao.kernelRadius = 0.5; ssao.minDistance = 0.000002; ssao.maxDistance = 0.0004;
       const hideForAO = () => { const hidden = glassMeshes.concat(Object.values(labelSprites).flatMap(s => [s.walk, s.over]), floorMeshes.map(f => rooms.find(r => r.floor === f).overlay)).filter(o => o && o.visible); hidden.forEach(o => o.visible = false); return hidden; };
       const origOverride = ssao.renderOverride.bind(ssao);
       ssao.renderOverride = function () { const h = hideForAO(); origOverride.apply(null, arguments); h.forEach(o => o.visible = true); };
@@ -1259,8 +1375,12 @@
       world.add(walk, over);
       labelSprites[r.id] = { walk, over };
     });
+    const vrij = rentable.filter(r => r.status === 'vrij').length;
+    towerLabel = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture('12e verdieping', `${vrij} kantoren vrij · klik om te bekijken`, '#7a2d29'), depthTest: false, transparent: true }));
+    towerLabel.scale.set(16, 5.5, 1); towerLabel.position.set(66, 2, 22); towerLabel.renderOrder = 6; scene.add(towerLabel);
     applyModeVisibility();
   }
+  let towerLabel = null;
 
   // Bezoeker (zichtbaar van boven)
   const figure = new THREE.Group();
@@ -1286,6 +1406,12 @@
     const dist = aspect < 0.8 ? 86 : aspect < 1.2 ? 62 : 46;
     return { pos: new THREE.Vector3(25, dist * 0.8, 22 + dist * 0.6), target: new THREE.Vector3(25, 0, 22) };
   }
+  function extPose() {
+    const aspect = stage.clientWidth / Math.max(1, stage.clientHeight);
+    const dist = aspect < 0.8 ? 260 : aspect < 1.2 ? 200 : 165;
+    return { pos: new THREE.Vector3(25 + dist * 0.62, -2 + dist * 0.16, 22 + dist * 0.77), target: new THREE.Vector3(25, -6, 22) };
+  }
+  const poseFor = m => m === 'walk' ? eyePose() : m === 'ext' ? extPose() : overviewPose();
   function eyePose() {
     const dir = new THREE.Vector3(-Math.sin(v.yaw) * Math.cos(v.pitch), Math.sin(v.pitch), -Math.cos(v.yaw) * Math.cos(v.pitch));
     const pos = new THREE.Vector3(v.x, 1.65, v.z);
@@ -1297,15 +1423,17 @@
       if (!r.overlay) return;
       const o = r.overlay, walk = mode === 'walk';
       o.material.color.setHex(dimmed(r.id) ? STATUS.dim : STATUS[r.status]);
-      o.visible = r.type !== 'algemeen' && (!walk || r.id === selected);
+      o.visible = r.type !== 'algemeen' && mode !== 'ext' && (!walk || r.id === selected);
       o.material.opacity = walk ? 0.16 : r.id === selected ? 0.8 : 0.5;
     });
   }
   function applyModeVisibility() {
     const walk = mode === 'walk';
-    Object.values(labelSprites).forEach(({ walk: w, over: o }) => { w.visible = walk && !dimmed(w.userData.roomId); o.visible = !walk && byId[o.userData.roomId].type !== 'algemeen' && !dimmed(o.userData.roomId); });
-    lintels.forEach(l => l.visible = walk);
-    figure.visible = !walk;
+    Object.values(labelSprites).forEach(({ walk: w, over: o }) => { w.visible = walk && !dimmed(w.userData.roomId); o.visible = mode === 'over' && byId[o.userData.roomId].type !== 'algemeen' && !dimmed(o.userData.roomId); });
+    lintels.forEach(l => l.visible = mode !== 'over');
+    figure.visible = mode === 'over';
+    aboveGroup.visible = mode !== 'over';
+    if (towerLabel) towerLabel.visible = mode === 'ext';
     refreshOverlays();
   }
   function setMode(m) {
@@ -1314,24 +1442,27 @@
     mode = m;
     document.getElementById('m-over').setAttribute('aria-pressed', String(m === 'over'));
     document.getElementById('m-walk').setAttribute('aria-pressed', String(m === 'walk'));
+    document.getElementById('m-ext').setAttribute('aria-pressed', String(m === 'ext'));
     stage.classList.toggle('walk', m === 'walk');
     document.getElementById('dpad').hidden = m !== 'walk';
-    wallTarget = m === 'walk' ? 1 : 0.42;
+    wallTarget = m === 'over' ? 0.42 : 1;
     controls.enabled = false;
     camera.fov = m === 'walk' ? 62 : 45; camera.updateProjectionMatrix();
     applyModeVisibility();
     updateHint();
-    camTween = { from, t0: performance.now(), dur: reduceMotion ? 1 : 1100, to: m };
+    camTween = { from, t0: performance.now(), dur: reduceMotion ? 1 : (m === 'ext' || from.pos.y > 60 ? 1800 : 1100), to: m };
     if (shownRoom) renderRoom(byId[shownRoom]);
   }
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function updateHint() {
     document.getElementById('hint').textContent = mode === 'walk'
       ? 'Sleep om rond te kijken · pijltjes of WASD om te lopen · klik op een vloer om erheen te lopen'
+      : mode === 'ext' ? 'Sleep om rond de toren te draaien · scroll om te zoomen · klik op de toren om naar binnen te gaan'
       : 'Sleep om te draaien · scroll of knijp om te zoomen · klik op een ruimte om erheen te lopen';
   }
   document.getElementById('m-over').addEventListener('click', () => setMode('over'));
   document.getElementById('m-walk').addEventListener('click', () => setMode('walk'));
+  document.getElementById('m-ext').addEventListener('click', () => setMode('ext'));
 
   // ---------- Lopen ----------
   const R = 0.3;
@@ -1420,6 +1551,7 @@
     drag = null;
   });
   function pick(e) {
+    if (mode === 'ext') { setMode('over'); return; }
     const rect = renderer.domElement.getBoundingClientRect();
     ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
@@ -1550,17 +1682,22 @@
 
     wallScale += (wallTarget - wallScale) * Math.min(1, dt * 5);
     tall.scale.y = wallScale;
-    ceilingGroup.visible = mode === 'walk' && wallScale > 0.97;
+    ceilingGroup.visible = mode !== 'over' && wallScale > 0.97;
 
     if (camTween) {
       const t = Math.min(1, (now - camTween.t0) / camTween.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      const to = camTween.to === 'walk' ? eyePose() : overviewPose();
+      const to = poseFor(camTween.to);
       camera.position.lerpVectors(camTween.from.pos, to.pos, k);
       const look = new THREE.Vector3().lerpVectors(camTween.from.target, to.target, k);
       camera.lookAt(look);
       if (t >= 1) {
         camTween = null;
-        if (mode === 'over') { controls.target.copy(to.target); controls.enabled = true; controls.update(); }
+        if (mode !== 'walk') {
+          const ext = mode === 'ext';
+          controls.minDistance = ext ? 45 : 12; controls.maxDistance = ext ? 420 : 110;
+          controls.maxPolarAngle = Math.PI * (ext ? 0.5 : 0.44);
+          controls.target.copy(to.target); controls.enabled = true; controls.update();
+        }
       }
     } else if (mode === 'walk') {
       camera.position.set(v.x, 1.65 + bob, v.z); camera.rotation.set(v.pitch, v.yaw, 0);
