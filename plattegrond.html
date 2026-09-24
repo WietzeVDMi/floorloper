@@ -30,6 +30,8 @@
     --visitor: #d9502f;
     --focus: #3f6aa1;
     --furn: #b9c1bd;
+    --oak: #dfc7a1; --oak-line: #c9aa7d; --burgundy: #7a2d29; --walnut: #5c3b27; --boucle: #8a5a3e;
+    --cream: #e8e1d5; --dark-top: #3a3d40; --desk: #ffffff; --chair: #8e9395; --plant: #4f8a45; --glass: #7fa9b5; --tile-dark: #2d302f;
     --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
     --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -41,7 +43,7 @@
       --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
       --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
       --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
-      --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d;
+      --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
     }
   }
   :root[data-theme="dark"] {
@@ -50,10 +52,11 @@
     --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
     --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
     --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
-    --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d;
+    --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     background: var(--paper);
     color: var(--ink);
@@ -117,7 +120,15 @@
   .furn { fill: none; stroke: var(--furn); stroke-width: 1.4; pointer-events: none; }
   .furn.solid { fill: var(--furn); stroke: none; }
   .wall-outer { fill: none; stroke: var(--wall); stroke-width: 5; stroke-linejoin: miter; }
-  .corr { fill: var(--corridor); }
+  .corr { fill: url(#oak); }
+  .f { stroke: var(--wall); stroke-width: .7; pointer-events: none; }
+  .f-desk { fill: var(--desk); } .f-chair { fill: var(--chair); } .f-boucle { fill: var(--boucle); }
+  .f-dark { fill: var(--dark-top); } .f-walnut { fill: var(--walnut); } .f-cream { fill: var(--cream); }
+  .f-plant { fill: var(--plant); stroke: none; pointer-events: none; }
+  .f-tile { fill: url(#tiles); stroke: none; pointer-events: none; }
+  .f-glass { fill: none; stroke: var(--glass); stroke-width: 1.6; pointer-events: none; }
+  .wainscot { stroke: var(--burgundy); stroke-width: 3.5; pointer-events: none; }
+  .glasswall { stroke: var(--glass); stroke-width: 3; stroke-dasharray: 12 3; pointer-events: none; }
   .void { fill: var(--void); stroke: var(--ink-3); stroke-dasharray: 6 5; stroke-width: 1; }
   .void-label { font: 500 12px var(--mono); fill: var(--ink-3); letter-spacing: .1em; }
   .door { fill: var(--floor); }
@@ -202,6 +213,17 @@
             <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
               <rect width="8" height="8" style="fill:var(--verhuurd-bg)"></rect>
               <line x1="0" y1="0" x2="0" y2="8" style="stroke:var(--ink-3);stroke-width:1.2;opacity:.45"></line>
+            </pattern>
+            <pattern id="oak" width="72" height="16" patternUnits="userSpaceOnUse">
+              <rect width="72" height="16" style="fill:var(--oak)"></rect>
+              <line x1="0" y1="0" x2="72" y2="0" style="stroke:var(--oak-line);stroke-width:1"></line>
+              <line x1="30" y1="0" x2="30" y2="8" style="stroke:var(--oak-line);stroke-width:1"></line>
+              <line x1="0" y1="8" x2="72" y2="8" style="stroke:var(--oak-line);stroke-width:1"></line>
+              <line x1="58" y1="8" x2="58" y2="16" style="stroke:var(--oak-line);stroke-width:1"></line>
+            </pattern>
+            <pattern id="tiles" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="6" height="6" style="fill:var(--tile-dark)"></rect>
+              <rect x="1" y="1" width="4" height="4" style="fill:none;stroke:#f1efe9;stroke-width:1"></rect>
             </pattern>
           </defs>
           <g id="g-base"></g>
@@ -331,7 +353,13 @@
   el('text', { x: 400, y: 444, 'text-anchor': 'middle', class: 'corr-label' }, core).textContent = 'LIFTEN';
 
   // Receptiebalies in de hal
-  for (const y of [250, 600]) el('rect', { x: 300, y: y, width: 18, height: 34, rx: 3, class: 'furn solid' }, gBase);
+  for (const y of [250, 600]) el('rect', { x: 300, y: y, width: 18, height: 34, rx: 2, class: 'f f-walnut' }, gBase);
+  const plant = (x, y, r = 6, parent = gBase) => el('circle', { cx: x, cy: y, r, class: 'f-plant' }, parent);
+  for (const y of [372, 400]) el('rect', { x: 246, y: y - 8, width: 16, height: 16, rx: 7, class: 'f f-cream' }, gBase);
+  el('circle', { cx: 254, cy: 386, r: 3.5, class: 'f f-walnut' }, gBase);
+  el('rect', { x: 244, y: 470, width: 22, height: 22, class: 'f-glass' }, gBase);
+  el('rect', { x: 246, y: 473, width: 7, height: 16, class: 'f f-boucle' }, gBase);
+  [[252, 232], [252, 648], [320, 380], [320, 500], [55, 200], [945, 200], [55, 680], [945, 680]].forEach(([x, y]) => plant(x, y));
 
   // Buitenmuur en schaalbalk
   el('polygon', { points: outline, class: 'wall-outer' }, gWalls);
@@ -346,67 +374,105 @@
     const top = r.south ? r.y + 8 : r.y + 34;
     const bot = r.south ? r.y + r.h - 34 : r.y + r.h - 8;
     const fx = r.x + 8, fw = r.w - 16, fh = bot - top, mx = r.x + r.w / 2, my = top + fh / 2;
-    const chair = (x, y) => el('circle', { cx: x, cy: y, r: 3.2, class: 'furn' }, g);
+    const rect = (x, y, w, h, cls, rx = 0) => el('rect', { x, y, width: w, height: h, rx, class: 'f ' + cls }, g);
+    const chair = (x, y, cls = 'f-chair') => el('circle', { cx: x, cy: y, r: 3.4, class: 'f ' + cls }, g);
+    const boucle = (x, y) => rect(x - 4.5, y - 4.5, 9, 9, 'f-boucle', 2.5);
+    const plant = (x, y, rr = 6) => el('circle', { cx: x, cy: y, r: rr, class: 'f-plant' }, g);
     switch (r.furn) {
       case 'desks': {
         const n = 4, cw = 52, ch = 60, gap = (fw - n * cw) / (n + 1);
         for (let i = 0; i < n; i++) {
           const x0 = fx + gap + i * (cw + gap), y0 = my - ch / 2;
           for (let c = 0; c < 2; c++) for (let rr = 0; rr < 3; rr++) {
-            el('rect', { x: x0 + 8 + c * 18, y: y0 + rr * 20, width: 18, height: 20, class: 'furn' }, g);
+            rect(x0 + 8 + c * 18, y0 + rr * 20, 18, 20, 'f-desk');
             chair(c ? x0 + 48 : x0 + 3, y0 + rr * 20 + 10);
           }
         }
+        plant(r.x + 12, r.south ? r.y + 12 : r.y + r.h - 12, 7);
         break;
       }
       case 'oval': {
-        const rx = Math.min(fw * 0.3, 36), ry = Math.min(fh * 0.22, 13);
-        el('ellipse', { cx: mx, cy: my, rx, ry, class: 'furn' }, g);
-        for (const s of [-1, 1]) for (const k of [-0.55, 0, 0.55]) chair(mx + k * rx, my + s * (ry + 6));
-        chair(mx - rx - 6, my); chair(mx + rx + 6, my);
+        const tw = Math.min(fw * 0.6, 76), td = Math.min(fh * 0.3, 18);
+        rect(mx - tw / 2, my - td / 2, tw, td, 'f-dark', 1.5);
+        const n = Math.max(2, Math.round(tw / 22));
+        for (let i = 0; i < n; i++) { const cx = mx - tw / 2 + tw * (i + 0.5) / n; boucle(cx, my - td / 2 - 6); boucle(cx, my + td / 2 + 6); }
+        plant(r.x + r.w - 12, r.south ? r.y + 12 : r.y + r.h - 12, 6);
         break;
       }
       case 'round':
         for (const dx of [-0.24, 0.12]) {
           const cx = r.x + r.w * (0.5 + dx), cy = my;
-          el('circle', { cx, cy, r: 11, class: 'furn' }, g);
+          el('circle', { cx, cy, r: 11, class: 'f f-desk' }, g);
           chair(cx - 17, cy); chair(cx + 17, cy); chair(cx, cy - 17); chair(cx, cy + 17);
         }
-        el('rect', { x: r.x + r.w - 30, y: top + 2, width: 20, height: fh - 4, class: 'furn' }, g);
+        rect(r.x + r.w - 30, top + 2, 20, fh - 4, 'f-walnut');
         break;
       case 'small':
       case 'duo':
         for (const k of (r.furn === 'small' ? [0.25, 0.62] : [0.32])) {
-          el('rect', { x: r.x + r.w * k, y: my - 9, width: 34, height: 18, class: 'furn' }, g);
+          rect(r.x + r.w * k, my - 9, 34, 18, 'f-desk');
           chair(r.x + r.w * k + 17, r.south ? my - 15 : my + 15);
         }
+        if (r.furn === 'duo') plant(r.x + r.w - 12, r.south ? r.y + 12 : r.y + r.h - 12, 5);
         break;
       case 'exec':
-        el('rect', { x: fx + 6, y: my - 10, width: 48, height: 20, class: 'furn' }, g);
+        rect(fx + 6, my - 10, 48, 20, 'f-walnut');
         chair(fx + 30, r.south ? my - 16 : my + 16);
-        el('rect', { x: fx + 72, y: my - 12, width: 18, height: 34, rx: 4, class: 'furn' }, g);
-        el('rect', { x: r.x + r.w - 34, y: top, width: 26, height: fh, class: 'furn' }, g);
+        rect(fx + 70, my - 16, 16, 14, 'f-cream', 6); rect(fx + 70, my + 4, 16, 14, 'f-cream', 6);
+        rect(r.x + r.w - 34, top, 26, fh, 'f-desk');
         break;
       case 'u': {
         const w = 74, h = Math.min(fh - 20, 140), x0 = mx - w / 2, y0 = my - h / 2, t = 18;
         const d = r.south
           ? `M${x0},${y0 + h} V${y0} H${x0 + w} V${y0 + h} H${x0 + w - t} V${y0 + t} H${x0 + t} V${y0 + h} Z`
           : `M${x0},${y0} V${y0 + h} H${x0 + w} V${y0} H${x0 + w - t} V${y0 + h - t} H${x0 + t} V${y0} Z`;
-        el('path', { d, class: 'furn' }, g);
-        for (let i = 0; i < 6; i++) { const y = y0 + 12 + i * (h - 24) / 5; chair(x0 - 7, y); chair(x0 + w + 7, y); }
+        el('path', { d, class: 'f f-dark' }, g);
+        for (let i = 0; i < 6; i++) { const y = y0 + 12 + i * (h - 24) / 5; boucle(x0 - 8, y); boucle(x0 + w + 8, y); }
+        plant(r.x + 14, r.south ? r.y + 14 : r.y + r.h - 14, 7);
         break;
       }
       case 'wc':
-        for (let i = 0; i < 4; i++) el('rect', { x: fx + 4 + i * 32, y: r.south ? bot - 22 : top, width: 26, height: 22, class: 'furn' }, g);
+        for (let i = 0; i < 4; i++) rect(fx + 4 + i * 32, r.south ? bot - 22 : top, 26, 22, 'f-desk');
         break;
-      case 'pantry':
-        el('rect', { x: fx, y: top, width: 14, height: fh, class: 'furn' }, g);
-        el('circle', { cx: mx + 8, cy: my, r: 9, class: 'furn' }, g);
+      case 'pantry': {
+        el('rect', { x: r.x + 16, y: r.y + 4, width: 9, height: r.h - 8, rx: 4.5, class: 'f-tile' }, g);
+        rect(r.x + 3, r.y + 6, 12, r.h - 12, 'f-walnut');
+        const s = r.south ? -1 : 1;
+        el('circle', { cx: mx + 10, cy: my + s * 20, r: 8, class: 'f f-cream' }, g);
+        for (const [dx, dy] of [[-11, 0], [11, 0], [0, 12 * s]]) el('circle', { cx: mx + 10 + dx, cy: my + s * 20 + dy, r: 3.6, class: 'f f-cream' }, g);
         break;
+      }
       case 'stair':
         for (let i = 0; i < 7; i++) { const y = top + 4 + i * (fh - 8) / 6; el('line', { x1: fx + 4, y1: y, x2: fx + fw - 4, y2: y, class: 'furn' }, g); }
         break;
     }
+  }
+
+  // Bordeauxrode lambrisering langs de gangen en glazen wanden bij vergaderkamers
+  function inCorridor(px, py) {
+    if (px < 40 || px > 960 || py < 60 || py > 820) return false;
+    if (px > 470 && py > 320 && py < 560) return false;
+    if (px > 330 && px < 470 && py > 300 && py < 580) return false;
+    return !rooms.some(r => px > r.x && px < r.x + r.w && py > r.y && py < r.y + r.h);
+  }
+  function edgeFinish(x1, y1, x2, y2, door, glass) {
+    const horiz = y1 === y2, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const parts = [];
+    const hasDoor = door && (horiz ? door[1] === y1 && door[0] > x1 && door[0] < x2 : door[0] === x1 && door[1] > y1 && door[1] < y2);
+    if (hasDoor) { const d = horiz ? door[0] : door[1]; parts.push([horiz ? x1 : y1, d - 12], [d + 12, horiz ? x2 : y2]); }
+    else parts.push([horiz ? x1 : y1, horiz ? x2 : y2]);
+    for (const side of [-1, 1]) {
+      if (!(horiz ? inCorridor(mx, my + side * 6) : inCorridor(mx + side * 6, my))) continue;
+      for (const [a, b] of parts) {
+        if (glass) el('line', horiz ? { x1: a, y1, x2: b, y2: y1, class: 'glasswall' } : { x1, y1: a, x2: x1, y2: b, class: 'glasswall' }, gWalls);
+        else { const o = side * 3.2; el('line', horiz ? { x1: a, y1: y1 + o, x2: b, y2: y1 + o, class: 'wainscot' } : { x1: x1 + o, y1: a, x2: x1 + o, y2: b, class: 'wainscot' }, gWalls); }
+      }
+    }
+  }
+  function finishRoom(r) {
+    const glass = r.type === 'gedeeld';
+    edgeFinish(r.x, r.y, r.x + r.w, r.y, r.door, glass); edgeFinish(r.x, r.y + r.h, r.x + r.w, r.y + r.h, r.door, glass);
+    edgeFinish(r.x, r.y, r.x, r.y + r.h, r.door, glass); edgeFinish(r.x + r.w, r.y, r.x + r.w, r.y + r.h, r.door, glass);
   }
 
   const roomEls = {};
@@ -414,6 +480,7 @@
     const g = el('g', { class: 'room st-' + r.status, tabindex: 0, role: 'button', 'aria-label': `${r.id} ${r.name}, ${statusLabel(r.status)}` }, gRooms);
     el('rect', { x: r.x, y: r.y, width: r.w, height: r.h, class: 'rf' }, g);
     drawFurniture(r, g);
+    finishRoom(r);
     const ly = r.south ? r.y + r.h - 22 : r.y + 16;
     el('text', { x: r.x + 8, y: ly, class: 'code' }, g).textContent = r.type === 'algemeen' ? '' : r.id;
     const label = r.furn === 'stair' ? 'Trap' : r.w < 100 ? r.name.split(' ')[0] : r.name;
