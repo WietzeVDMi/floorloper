@@ -9,15 +9,15 @@
 <style>
   .altlink { font: 600 14px var(--body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
   :root {
-    --paper: #eef0ec;
-    --sheet: #f8f9f6;
-    --ink: #1c2629;
-    --ink-2: #4c5a5e;
-    --ink-3: #8a9598;
-    --line: #d3d8d3;
+    --paper: #f3efe8;
+    --sheet: #fbf9f5;
+    --ink: #2b211d;
+    --ink-2: #5e514a;
+    --ink-3: #9a8c82;
+    --line: #e0d7cc;
     --wall: #263236;
     --floor: #ffffff;
-    --corridor: #e6e9e4;
+    --corridor: #efe8de;
     --void: #dfe3dd;
     --vrij: #2e8a57;
     --vrij-bg: #d8efdf;
@@ -29,6 +29,7 @@
     --gedeeld-bg: #dce5f2;
     --visitor: #d9502f;
     --focus: #3f6aa1;
+    --accent: #7a2d29; --on-accent: #fff8f2;
     --furn: #b9c1bd;
     --oak: #dfc7a1; --oak-line: #c9aa7d; --burgundy: #7a2d29; --walnut: #5c3b27; --boucle: #8a5a3e;
     --cream: #e8e1d5; --dark-top: #3a3d40; --desk: #ffffff; --chair: #8e9395; --plant: #4f8a45; --glass: #7fa9b5; --tile-dark: #2d302f;
@@ -39,20 +40,20 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
-      --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
+      --paper: #1a1512; --sheet: #231c18; --ink: #efe6dd; --ink-2: #bcaea2; --ink-3: #85776d;
+      --line: #3a302a; --wall: #c9d2cf; --floor: #20292c; --corridor: #2b231e; --void: #131819;
       --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
       --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
-      --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
+      --visitor: #ff7a55; --focus: #86a9dc; --accent: #c46a5f; --on-accent: #1a1512; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --paper: #151b1d; --sheet: #1c2427; --ink: #e8ecea; --ink-2: #aab5b3; --ink-3: #74807f;
-    --line: #2e393c; --wall: #c9d2cf; --floor: #20292c; --corridor: #182023; --void: #131819;
+    --paper: #1a1512; --sheet: #231c18; --ink: #efe6dd; --ink-2: #bcaea2; --ink-3: #85776d;
+    --line: #3a302a; --wall: #c9d2cf; --floor: #20292c; --corridor: #2b231e; --void: #131819;
     --vrij: #5cc48a; --vrij-bg: #1d3a2a; --optie: #e0a94a; --optie-bg: #3d3018;
     --verhuurd: #8d9899; --verhuurd-bg: #283134; --gedeeld: #86a9dc; --gedeeld-bg: #1f2c40;
-    --visitor: #ff7a55; --focus: #86a9dc; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
+    --visitor: #ff7a55; --focus: #86a9dc; --accent: #c46a5f; --on-accent: #1a1512; --furn: #3e4a4d; --oak: #4a3c2b; --oak-line: #5c4a35; --burgundy: #b5544c; --walnut: #8a6446; --boucle: #a2765a; --cream: #cfc6b8; --dark-top: #121415; --desk: #dedcd6; --chair: #6b7072; --plant: #6aa35c; --glass: #7fa3ad; --tile-dark: #111314;
   }
 
   * { box-sizing: border-box; }
@@ -124,6 +125,12 @@
   .f { stroke: var(--wall); stroke-width: .7; pointer-events: none; }
   .f-desk { fill: var(--desk); } .f-chair { fill: var(--chair); } .f-boucle { fill: var(--boucle); }
   .f-dark { fill: var(--dark-top); } .f-walnut { fill: var(--walnut); } .f-cream { fill: var(--cream); }
+  .desk-vrij { fill: var(--vrij-bg); stroke: var(--vrij); stroke-width: 1.4; }
+  .desk-verhuurd { fill: url(#hatch); }
+  .desk-flex { fill: var(--gedeeld-bg); }
+  .desk-hit { pointer-events: auto; cursor: pointer; }
+  .desk-hit:hover { stroke: var(--visitor); stroke-width: 2; }
+  .desk-sel { stroke: var(--visitor) !important; stroke-width: 3 !important; }
   .f-plant { fill: var(--plant); stroke: none; pointer-events: none; }
   .f-tile { fill: url(#tiles); stroke: none; pointer-events: none; }
   .f-glass { fill: none; stroke: var(--glass); stroke-width: 1.6; pointer-events: none; }
@@ -176,12 +183,26 @@
   .list-row .p { font: 500 13px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
   .note { font-size: 12px; color: var(--ink-3); }
   .shortlist-count { font-family: var(--mono); }
+
+  .incl { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .incl li { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: var(--corridor); color: var(--ink-2); }
+  .stat.wide { grid-column: span 2; }
+  .stat .v.big { font-size: 24px; }
+  .desk-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .desk-chip { font: 500 13px var(--mono); padding: 8px 0; border-radius: 6px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink-2); cursor: pointer; }
+  .desk-chip.vrij { background: var(--vrij-bg); color: var(--vrij); border-color: var(--vrij); }
+  .desk-chip.verhuurd { background: var(--verhuurd-bg); color: var(--verhuurd); }
+  .desk-chip:disabled { cursor: default; }
+  .list-row.static, .list-row:disabled { cursor: default; color: inherit; }
+  .list-row.static:hover, .list-row:disabled:hover { background: none; }
+  .pill.flex { background: var(--gedeeld-bg); color: var(--gedeeld); }
+  .btn:not(.ghost) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 </style>
 
 <div class="wrap">
   <header>
     <div>
-      <div class="eyebrow">Kantoorverdieping · 3e etage · Bruto ca. 1.650 m²</div>
+      <div class="eyebrow">Flexibele kantoorverdieping · 3e etage · alles all-in</div>
       <h1>Loop door de verdieping</h1>
     </div>
     <div class="summary" id="summary"></div>
@@ -238,41 +259,40 @@
         <span><i class="sw" style="background:var(--optie-bg)"></i>Onder optie</span>
         <span><svg width="16" height="12" aria-hidden="true"><rect x=".75" y=".75" width="14.5" height="10.5" rx="2" fill="url(#hatch)" style="stroke:var(--wall);stroke-width:1.5"></rect></svg>Verhuurd</span>
         <span><i class="sw" style="background:var(--gedeeld-bg)"></i>Gedeeld (voor alle huurders)</span>
+        <span><i class="sw" style="background:var(--vrij-bg);border-color:var(--vrij)"></i>Vaste werkplek vrij</span>
         <span><i class="dot" style="background:var(--visitor)"></i>U bent hier</span>
       </div>
     </section>
 
     <aside id="panel" aria-live="polite"></aside>
   </div>
-  <p class="note">Beschikbaarheid, oppervlaktes en huurprijzen zijn voorbeeldgegevens. Oppervlakte is berekend uit de tekening (1 raster = 5 cm), huur is excl. btw en servicekosten.</p>
+  <p class="note">Beschikbaarheid, prijzen en events zijn voorbeeldgegevens. Oppervlakte is berekend uit de tekening (1 raster = 5 cm), prijzen zijn all-in en excl. btw.</p>
 </div>
 
 <script>
 (function () {
   const M2_PER_UNIT = 0.0025;      // 5 cm per tekeneenheid
   const M_PER_UNIT = 0.05;
-  const RENT = 17.5;               // € per m² per maand
-  const SERVICE = 4.25;            // servicekosten € per m² per maand
   const H = 880;                   // spiegelas: y -> H - y
 
   // ---- Ruimtes (noordvleugel; zuidvleugel wordt gespiegeld) ----
   const north = [
-    { id: 'A1', name: 'Kantoortuin Noord', type: 'kantoor', x: 390, y: 60, w: 420, h: 120, door: [600, 180], node: 'n600', seats: 24, furn: 'desks', status: 'vrij', from: '1 nov 2026', text: 'Open werkvloer met daglicht aan twee zijden. Vier werkeilanden van zes plekken, direct aan de gang met pantry.' },
+    { id: 'A1', name: 'Coworking Noord', short: 'Coworking', type: 'cowork', x: 390, y: 60, w: 420, h: 120, door: [600, 180], node: 'n600', seats: 24, furn: 'desks', text: 'Open werkruimte met twaalf vaste werkplekken en een flexzone van twaalf plekken, aan de gang met de pantry. Hier werken zzp’ers en kleine teams naast elkaar.' },
     { id: 'A2', name: 'Directiekamer Noord', type: 'kantoor', x: 810, y: 60, w: 150, h: 120, door: [885, 180], node: 'n885', seats: 3, furn: 'exec', status: 'verhuurd', text: 'Afgesloten kamer met eigen toilet en zithoek. Verhuurd tot en met 2029.' },
     { id: 'A3', name: 'Kantoor Noord', type: 'kantoor', x: 330, y: 220, w: 140, h: 80, door: [400, 220], node: 'n400', seats: 4, furn: 'small', status: 'vrij', from: 'direct', text: 'Compacte kamer naast de receptie en de liften. Geschikt voor een team van drie tot vier.' },
     { id: 'A4', name: 'Projectruimte Noord', type: 'kantoor', x: 470, y: 220, w: 170, h: 100, door: [555, 220], node: 'n555', seats: 6, furn: 'round', status: 'optie', from: '1 dec 2026', text: 'Kamer met twee overlegtafels en werkplekken langs de wand. Er ligt een optie tot 15 oktober.' },
     { id: 'PN', name: 'Pantry Noord', type: 'algemeen', x: 640, y: 220, w: 60, h: 100, door: [670, 220], node: 'n670', furn: 'pantry', text: 'Koffie, koelkast en vaatwasser. Voor alle huurders op deze vleugel.' },
-    { id: 'A5', name: 'Vergaderkamer Oost', type: 'gedeeld', x: 700, y: 220, w: 110, h: 100, door: [755, 220], node: 'n755', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht met scherm. Te reserveren via de receptie, inbegrepen in de servicekosten.' },
+    { id: 'A5', name: 'Vergaderkamer Oost', type: 'gedeeld', x: 700, y: 220, w: 110, h: 100, door: [755, 220], node: 'n755', seats: 8, furn: 'oval', bookable: true, text: 'Vergadertafel voor acht met scherm. Te reserveren via de receptie, inbegrepen in de servicekosten.' },
     { id: 'A6', name: 'Flexkamer Noord', type: 'kantoor', x: 810, y: 220, w: 90, h: 100, door: [855, 220], node: 'n855', seats: 2, furn: 'duo', status: 'vrij', from: 'direct', text: 'Kleine kamer voor twee personen, ook te huren als belkamer of opslag.' },
     { id: 'TNO', name: 'Trappenhuis Noord-Oost', type: 'algemeen', x: 900, y: 220, w: 60, h: 100, door: [930, 220], node: 'n930', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
     { id: 'TNW', name: 'Trappenhuis Noord-West', type: 'algemeen', x: 40, y: 60, w: 60, h: 120, door: [70, 180], node: 'n70', furn: 'stair', text: 'Nooduitgang en trap naar de andere verdiepingen.' },
     { id: 'WN', name: 'Toiletten Noord', type: 'algemeen', x: 100, y: 60, w: 140, h: 120, door: [170, 180], node: 'n170', furn: 'wc', text: 'Dames, heren en een mindervalidentoilet.' },
-    { id: 'VN', name: 'Vergaderkamer Noord', type: 'gedeeld', x: 240, y: 60, w: 150, h: 120, door: [315, 180], node: 'n315', seats: 8, furn: 'oval', text: 'Vergadertafel voor acht bij de receptie. Te reserveren via de receptie.' },
-    { id: 'BN', name: 'Boardroom Noord', type: 'gedeeld', x: 40, y: 220, w: 200, h: 210, door: [240, 325], node: 'h325', seats: 16, furn: 'u', text: 'Grote zaal met U-opstelling voor zestien personen. Kan worden gekoppeld aan Boardroom Zuid.' },
+    { id: 'VN', name: 'Vergaderkamer Noord', type: 'gedeeld', x: 240, y: 60, w: 150, h: 120, door: [315, 180], node: 'n315', seats: 8, furn: 'oval', bookable: true, text: 'Vergadertafel voor acht bij de receptie. Te reserveren via de receptie.' },
+    { id: 'BN', name: 'Lounge & lunch', short: 'Lounge', type: 'gedeeld', x: 40, y: 220, w: 200, h: 210, door: [240, 325], node: 'h325', seats: 30, furn: 'lounge', text: 'Het hart van de verdieping: een bar met koffie en thee, een lange lunchtafel en een loungehoek bij het raam. Hier ontmoet u de andere huurders, en hier zijn de lunches en borrels.' },
   ];
 
   const southOverride = {
-    A1: { id: 'B1', name: 'Kantoortuin Zuid', status: 'vrij', from: '1 jan 2027', text: 'Open werkvloer op het zuiden met vier werkeilanden van zes plekken. De huidige huurder vertrekt eind 2026.' },
+    A1: { id: 'B1', name: 'Teamkantoor Zuid', short: null, type: 'kantoor', status: 'vrij', from: '1 jan 2027', text: 'Eigen afsluitbare teamruimte op het zuiden met vier werkeilanden van zes plekken. Ideaal als uw team uit de coworking groeit.' },
     A2: { id: 'B2', name: 'Directiekamer Zuid', status: 'vrij', from: 'direct', text: 'Afgesloten kamer met eigen toilet en zithoek, grenzend aan de kantoortuin.' },
     A3: { id: 'B3', name: 'Kantoor Zuid', status: 'verhuurd', text: 'Compacte kamer naast de receptie. Verhuurd tot en met 2027.' },
     A4: { id: 'B4', name: 'Projectruimte Zuid', status: 'vrij', from: 'direct', text: 'Kamer met twee overlegtafels en werkplekken langs de wand.' },
@@ -283,7 +303,7 @@
     TNW: { id: 'TZW', name: 'Trappenhuis Zuid-West' },
     WN: { id: 'WZ', name: 'Toiletten Zuid' },
     VN: { id: 'VZ', name: 'Vergaderkamer Zuid' },
-    BN: { id: 'BZ', name: 'Boardroom Zuid' },
+    BN: { id: 'BZ', name: 'Eventruimte', short: 'Events', furn: 'event', seats: 40, text: 'Zaal voor presentaties, trainingen en de wekelijkse events. Huurders reserveren hem met korting.' },
   };
 
   const mirrorNode = n => n === 'h325' ? 'h555' : n.replace(/^n/, 's');
@@ -292,11 +312,206 @@
   }, southOverride[r.id]));
 
   const rooms = north.concat(south).map(r => {
-    const status = r.type === 'kantoor' ? r.status : r.type;
+    const status = r.type === 'kantoor' ? r.status : r.type === 'cowork' ? 'vrij' : r.type;
     const m2 = Math.round(r.w * r.h * M2_PER_UNIT);
     return Object.assign(r, { status, m2, cx: r.x + r.w / 2, cy: r.y + r.h / 2 });
   });
   const byId = Object.fromEntries(rooms.map(r => [r.id, r]));
+  const rentable = rooms.filter(r => r.type === 'kantoor');
+  const available = rentable.filter(r => r.status === 'vrij' || r.status === 'optie');
+  // ---------- Aanbod en prijzen (voorbeeldgegevens) ----------
+  const PRICE = { perSeat: 375, flex: 199, vast: 299, meeting: 35, virtualPost: 99, virtualFlex: 299 };
+  const CONTRACT = 'Vanaf 3 maanden, daarna maandelijks opzegbaar';
+  const INCLUDED = ['Servicekosten en energie', 'Snel internet', 'Koffie, thee en fruit', 'Schoonmaak', 'Host en receptie', 'Lounge, lunch en events', 'Volledig ingericht'];
+  const VAST_BEZET = [1, 2, 4, 7, 9, 10];
+  const COWORK = rooms.find(r => r.type === 'cowork');
+  const desks = Array.from({ length: 24 }, (_, i) => ({
+    i, id: `${COWORK.id}-${String(i + 1).padStart(2, '0')}`,
+    kind: i < 12 ? 'vast' : 'flex',
+    status: i < 12 ? (VAST_BEZET.includes(i) ? 'verhuurd' : 'vrij') : 'flex',
+  }));
+  const deskById = Object.fromEntries(desks.map(d => [d.id, d]));
+  const vastVrij = desks.filter(d => d.kind === 'vast' && d.status === 'vrij');
+  const EVENTS = [
+    { d: 'Ma 28 sep', t: '12:30', name: 'Community lunch', room: 'BN' },
+    { d: 'Wo 30 sep', t: '08:30', name: 'Ontbijtsessie: groeien met je team', room: 'BZ' },
+    { d: 'Do 1 okt', t: '16:00', name: 'Workshop: LinkedIn voor ondernemers', room: 'BZ' },
+    { d: 'Vr 2 okt', t: '17:00', name: 'Vrijdagborrel', room: 'BN' },
+  ];
+  const allIn = r => r.seats * PRICE.perSeat;
+  const touches = (a, b) => a !== b && a.x <= b.x + b.w && b.x <= a.x + a.w && a.y <= b.y + b.h && b.y <= a.y + a.h &&
+    ((a.x === b.x + b.w || b.x === a.x + a.w) ? Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 10 : Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 10);
+  const growOptions = r => available.filter(o => touches(r, o));
+
+  const panel = document.getElementById('panel');
+  const eur = n => '€ ' + Math.round(n).toLocaleString('nl-NL');
+  function statusLabel(s) { return { vrij: 'Vrij', optie: 'Onder optie', verhuurd: 'Verhuurd', gedeeld: 'Gedeeld', algemeen: 'Algemene ruimte', flex: 'Flexplek' }[s]; }
+  const is3D = typeof setMode === 'function';
+  let shownRoom = null;
+
+  let shortlist = [];
+  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist') || '[]').filter(id => (byId[id] && byId[id].type === 'kantoor') || deskById[id]); } catch (e) { shortlist = []; }
+  const saveShortlist = () => { try { localStorage.setItem('plattegrond-shortlist', JSON.stringify(shortlist)); } catch (e) {} };
+  const itemOf = id => deskById[id]
+    ? { id, name: 'Vaste werkplek ' + id, seats: 1, price: PRICE.vast, go: COWORK.id }
+    : { id, name: byId[id].name, seats: byId[id].seats, price: allIn(byId[id]), go: id };
+
+  function renderSummary() {
+    const vrij = rentable.filter(r => r.status === 'vrij');
+    document.getElementById('summary').innerHTML =
+      `<span><b>${vrij.length}</b> kantoren vrij</span>` +
+      `<span><b>${vastVrij.length}</b> vaste werkplekken vrij</span>` +
+      `<span>All-in vanaf <b>${eur(PRICE.flex)}</b> p/mnd</span>`;
+  }
+  renderSummary();
+
+  function listRow(r) {
+    return `<button class="list-row" data-go="${r.id}">
+      <span class="c" style="color:var(--${r.status})">${r.id}</span>
+      <span><span class="n">${r.name}</span><br><span class="m">${r.seats} werkplekken · ${r.m2} m² · ${r.status === 'optie' ? 'onder optie' : 'vrij ' + (r.from === 'direct' ? 'direct' : 'per ' + r.from)}</span></span>
+      <span class="p">${eur(allIn(r))}<br><span class="m">all-in p/mnd</span></span>
+    </button>`;
+  }
+  function productRow(code, color, name, meta, price, go) {
+    return `<button class="list-row" ${go ? `data-go="${go}"` : 'disabled'}>
+      <span class="c" style="color:var(--${color})">${code}</span>
+      <span><span class="n">${name}</span><br><span class="m">${meta}</span></span>
+      <span class="p">${eur(price)}<br><span class="m">p/mnd</span></span>
+    </button>`;
+  }
+  const includedHtml = () => `<ul class="incl">${INCLUDED.map(t => `<li>${t}</li>`).join('')}</ul>`;
+  function bindGo() {
+    panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { stopTourIfOutside(b.dataset.go); goTo(b.dataset.go); }));
+    panel.querySelectorAll('[data-desk]').forEach(b => b.addEventListener('click', () => selectDesk(b.dataset.desk)));
+  }
+  function backButton() {
+    document.getElementById('back').addEventListener('click', () => { endTour(); goLift(); });
+    const lk = document.getElementById('look');
+    if (lk) lk.addEventListener('click', () => setMode('walk'));
+  }
+  const lookBtn = () => is3D && mode === 'over' ? `<button class="btn ghost" id="look">Kijk rond op ooghoogte</button>` : '';
+  const eyebrowFor = r => tour.active ? `Rondleiding · stop ${tour.i + 1} van ${tour.list.length}` : `${r.type === 'algemeen' ? 'Algemene ruimte' : r.id} · ${r.south ? 'zuidvleugel' : 'noordvleugel'}`;
+  function toggleList(id, rerender) {
+    const b = document.getElementById('toggle-list');
+    if (b) b.addEventListener('click', () => { shortlist = shortlist.includes(id) ? shortlist.filter(x => x !== id) : shortlist.concat(id); saveShortlist(); rerender(); });
+  }
+
+  function renderOverview() {
+    const sl = shortlist.map(itemOf);
+    panel.innerHTML = `
+      <div class="eyebrow">U staat bij de liften</div>
+      <h2>Wat zoekt u?</h2>
+      <p>Een eigen kantoor, een vaste werkplek of een flexplek: alles is ingericht en all-in, zodat u morgen kunt beginnen. Klik op een regel en u loopt erheen.</p>
+      <h3>Eigen kantoor (${available.length})</h3>
+      <div class="list">${available.map(listRow).join('')}</div>
+      <h3>Werkplek in de coworking</h3>
+      <div class="list">
+        ${productRow(COWORK.id, 'vrij', 'Vaste werkplek', `24/7 toegang · ${vastVrij.length} van 12 vrij`, PRICE.vast, COWORK.id)}
+        ${productRow(COWORK.id, 'gedeeld', 'Flexplek', '2 dagen per week · vrije plaatskeuze', PRICE.flex, COWORK.id)}
+      </div>
+      <h3>Zonder werkplek</h3>
+      <div class="list">
+        ${productRow('VK', 'algemeen', 'Virtueel kantoor', 'Post- en KvK-adres', PRICE.virtualPost)}
+        ${productRow('VK+', 'algemeen', 'Virtueel kantoor plus', 'Adres, post verwerken en onbeperkt flexwerken', PRICE.virtualFlex)}
+      </div>
+      <h3>Deze week op de verdieping</h3>
+      <div class="list">${EVENTS.map(e => `<button class="list-row" data-go="${e.room}">
+        <span class="c">${e.t}</span><span><span class="n">${e.name}</span><br><span class="m">${e.d} · ${byId[e.room].name}</span></span><span class="p"></span></button>`).join('')}</div>
+      <h3>Altijd inbegrepen</h3>
+      ${includedHtml()}
+      ${sl.length ? `<h3>Mijn selectie (${sl.length})</h3>
+        <div class="list">${sl.map(it => `<button class="list-row" data-go="${it.go}"><span class="c">${it.id}</span><span><span class="n">${it.name}</span><br><span class="m">${it.seats} werkplek${it.seats > 1 ? 'ken' : ''}</span></span><span class="p">${eur(it.price)}</span></button>`).join('')}</div>
+        <p class="note">Samen ${sl.reduce((s, it) => s + it.seats, 0)} werkplekken voor ${eur(sl.reduce((s, it) => s + it.price, 0))} all-in per maand. ${CONTRACT}.</p>` : ''}
+      <p class="note">Prijzen zijn voorbeeldprijzen, excl. btw.</p>`;
+    bindGo();
+  }
+
+  function renderRoom(r) {
+    shownRoom = r ? r.id : null;
+    if (!r) return renderOverview();
+    if (r.type === 'cowork') return renderCowork(r);
+    const isRent = r.type === 'kantoor', onList = shortlist.includes(r.id);
+    let body = '';
+    if (isRent) {
+      const grow = r.status !== 'verhuurd' ? growOptions(r) : [];
+      body = `<div class="stats">
+          <div class="stat wide"><span class="k">All-in per maand</span><span class="v big">${eur(allIn(r))}</span></div>
+          <div class="stat"><span class="k">Per werkplek</span><span class="v">${eur(PRICE.perSeat)}</span></div>
+          <div class="stat"><span class="k">Werkplekken</span><span class="v">${r.seats}</span></div>
+          <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+          <div class="stat"><span class="k">Beschikbaar</span><span class="v">${r.status === 'verhuurd' ? '—' : (r.from === 'direct' ? 'Direct' : r.from)}</span></div></div>
+        <p>${r.text}</p>
+        ${r.status !== 'verhuurd' ? `<p class="note">${CONTRACT}. Lopen vanaf de lift: ${distanceFromLift(r)} m.</p><h3>Inbegrepen</h3>${includedHtml()}` : ''}
+        ${grow.length ? `<h3>Groeien zonder te verhuizen</h3><p>Grenst aan ${grow.length === 1 ? 'deze vrije ruimte' : 'deze vrije ruimtes'}:</p><div class="list">${grow.map(listRow).join('')}</div>` : ''}`;
+    } else if (r.type === 'gedeeld') {
+      const ev = EVENTS.filter(e => e.room === r.id);
+      body = `<div class="stats">
+          <div class="stat"><span class="k">Personen</span><span class="v">${r.seats}</span></div>
+          <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
+          ${r.bookable ? `<div class="stat wide"><span class="k">Reserveren</span><span class="v">${eur(PRICE.meeting)} per uur, voor huurders met korting</span></div>` : ''}</div>
+        <p>${r.text}</p>
+        ${ev.length ? `<h3>Hier deze week</h3><div class="list">${ev.map(e => `<div class="list-row static"><span class="c">${e.t}</span><span><span class="n">${e.name}</span><br><span class="m">${e.d}</span></span><span></span></div>`).join('')}</div>` : ''}`;
+    } else body = `<p>${r.text}</p>`;
+    panel.innerHTML = `
+      <div class="eyebrow">${eyebrowFor(r)}</div>
+      <h2>${r.name}</h2>
+      <span class="pill ${r.status}"><span class="dot" style="background:currentColor"></span>${r.type === 'gedeeld' ? 'Voor alle huurders' : statusLabel(r.status)}</span>
+      ${body}
+      <div class="actions">
+        ${lookBtn()}
+        ${isRent && r.status !== 'verhuurd' ? `<button class="btn${onList ? ' ghost' : ''}" id="toggle-list">${onList ? 'Uit mijn selectie' : 'Zet in mijn selectie'}</button>` : ''}
+        <button class="btn ghost" id="back">Terug naar lift</button>
+      </div>`;
+    bindGo(); backButton(); toggleList(r.id, () => renderRoom(r));
+  }
+
+  function deskChip(d) {
+    const cls = d.status === 'vrij' ? 'vrij' : d.status === 'verhuurd' ? 'verhuurd' : 'gedeeld';
+    return `<button class="desk-chip ${cls}" data-desk="${d.id}" ${d.status === 'flex' ? 'disabled' : ''} title="${d.id}">${d.i + 1}</button>`;
+  }
+  function renderCowork(r) {
+    panel.innerHTML = `
+      <div class="eyebrow">${eyebrowFor(r)}</div>
+      <h2>${r.name}</h2>
+      <span class="pill vrij"><span class="dot" style="background:currentColor"></span>${vastVrij.length} vaste werkplekken vrij</span>
+      <div class="stats">
+        <div class="stat"><span class="k">Vaste werkplek, 24/7</span><span class="v">${eur(PRICE.vast)} p/mnd</span></div>
+        <div class="stat"><span class="k">Flexplek, 2 dagen p/w</span><span class="v">${eur(PRICE.flex)} p/mnd</span></div>
+      </div>
+      <p>${r.text}</p>
+      <h3>Vaste werkplekken</h3>
+      <div class="desk-grid">${desks.filter(d => d.kind === 'vast').map(deskChip).join('')}</div>
+      <p class="note">Klik op een groen nummer voor die plek. Plek 13 t/m 24 is de flexzone: u kiest elke dag zelf een plek.</p>
+      <h3>Inbegrepen</h3>${includedHtml()}
+      <div class="actions">${lookBtn()}<button class="btn ghost" id="back">Terug naar lift</button></div>`;
+    bindGo(); backButton();
+  }
+  function renderDesk(d) {
+    shownRoom = COWORK.id;
+    const onList = shortlist.includes(d.id);
+    panel.innerHTML = `
+      <div class="eyebrow">${COWORK.name} · plek ${d.i + 1}</div>
+      <h2>Vaste werkplek ${d.id}</h2>
+      <span class="pill ${d.status}"><span class="dot" style="background:currentColor"></span>${statusLabel(d.status)}</span>
+      <div class="stats">
+        <div class="stat wide"><span class="k">All-in per maand</span><span class="v big">${eur(PRICE.vast)}</span></div>
+        <div class="stat"><span class="k">Toegang</span><span class="v">24/7</span></div>
+        <div class="stat"><span class="k">Beschikbaar</span><span class="v">${d.status === 'vrij' ? 'Direct' : '—'}</span></div>
+      </div>
+      <p>Uw eigen bureau met beeldscherm en ladeblok in de coworking. U deelt de lounge, pantry en vergaderruimtes met de andere huurders. ${CONTRACT}.</p>
+      <div class="actions">
+        ${d.status === 'vrij' ? `<button class="btn${onList ? ' ghost' : ''}" id="toggle-list">${onList ? 'Uit mijn selectie' : 'Zet in mijn selectie'}</button>` : ''}
+        <button class="btn ghost" id="to-cowork">Alle plekken</button>
+      </div>`;
+    toggleList(d.id, () => renderDesk(d));
+    document.getElementById('to-cowork').addEventListener('click', () => renderCowork(COWORK));
+    if (typeof markDesk === 'function') markDesk(d.id);
+  }
+  function selectDesk(id) {
+    const d = deskById[id]; if (!d) return;
+    if (!(shownRoom === COWORK.id && selected === COWORK.id)) goTo(COWORK.id);
+    renderDesk(d);
+  }
 
   // ---- Looproutes (gangen) ----
   const nodes = { lift: [400, 440], hall: [285, 440], h325: [285, 325], h555: [285, 555] };
@@ -370,6 +585,13 @@
   el('text', { x: 140, y: 853, 'text-anchor': 'middle' }, sb).textContent = '5 m';
   el('text', { x: 240, y: 853, 'text-anchor': 'middle' }, sb).textContent = '10 m';
 
+  const deskEls = {};
+  let markedDesk = null;
+  function markDesk(id) {
+    if (markedDesk && deskEls[markedDesk]) deskEls[markedDesk].classList.remove('desk-sel');
+    markedDesk = id;
+    if (id && deskEls[id]) deskEls[id].classList.add('desk-sel');
+  }
   function drawFurniture(r, g) {
     const top = r.south ? r.y + 8 : r.y + 34;
     const bot = r.south ? r.y + r.h - 34 : r.y + r.h - 8;
@@ -384,7 +606,13 @@
         for (let i = 0; i < n; i++) {
           const x0 = fx + gap + i * (cw + gap), y0 = my - ch / 2;
           for (let c = 0; c < 2; c++) for (let rr = 0; rr < 3; rr++) {
-            rect(x0 + 8 + c * 18, y0 + rr * 20, 18, 20, 'f-desk');
+            const dr = rect(x0 + 8 + c * 18, y0 + rr * 20, 18, 20, 'f-desk');
+            if (r.type === 'cowork') {
+              const d = desks[i * 6 + c * 3 + rr];
+              dr.setAttribute('class', 'f desk-' + d.status + (d.kind === 'vast' ? ' desk-hit' : ''));
+              dr.dataset.desk = d.id; deskEls[d.id] = dr;
+              if (d.kind === 'vast') dr.addEventListener('click', e => { e.stopPropagation(); stopTourIfOutside(COWORK.id); selectDesk(d.id); });
+            }
             chair(c ? x0 + 48 : x0 + 3, y0 + rr * 20 + 10);
           }
         }
@@ -429,6 +657,27 @@
         el('path', { d, class: 'f f-dark' }, g);
         for (let i = 0; i < 6; i++) { const y = y0 + 12 + i * (h - 24) / 5; boucle(x0 - 8, y); boucle(x0 + w + 8, y); }
         plant(r.x + 14, r.south ? r.y + 14 : r.y + r.h - 14, 7);
+        break;
+      }
+      case 'lounge': {
+        rect(r.x + 60, r.y + 36, 130, 10, 'f-walnut');
+        for (let i = 0; i < 6; i++) el('circle', { cx: r.x + 70 + i * 22, cy: r.y + 54, r: 3.6, class: 'f f-cream' }, g);
+        const tx = r.x + 30, ty = r.y + 92;
+        rect(tx, ty, 120, 18, 'f-dark', 1.5);
+        for (let i = 0; i < 6; i++) { boucle(tx + 10 + i * 20, ty - 6); boucle(tx + 10 + i * 20, ty + 24); }
+        rect(r.x + 16, r.y + 150, 16, 16, 'f-cream', 7); rect(r.x + 16, r.y + 178, 16, 16, 'f-cream', 7);
+        el('circle', { cx: r.x + 50, cy: r.y + 172, r: 8, class: 'f f-walnut' }, g);
+        rect(r.x + 70, r.y + 192, 56, 14, 'f-cream', 4);
+        el('circle', { cx: r.x + 165, cy: r.y + 165, r: 8, class: 'f f-cream' }, g);
+        for (const [dx, dy] of [[-12, 0], [12, 0], [0, 13]]) el('circle', { cx: r.x + 165 + dx, cy: r.y + 165 + dy, r: 3.6, class: 'f f-cream' }, g);
+        plant(r.x + 12, r.y + 128, 8); plant(r.x + 186, r.y + 198, 7);
+        break;
+      }
+      case 'event': {
+        for (let row = 0; row < 5; row++) for (let col = 0; col < 6; col++) boucle(r.x + 45 + col * 22, r.y + 22 + row * 22);
+        rect(r.x + 110, r.y + r.h - 10, 80, 5, 'f-dark');
+        rect(r.x + 100, r.y + r.h - 30, 95, 14, 'f-walnut');
+        plant(r.x + 14, r.y + 14, 7);
         break;
       }
       case 'wc':
@@ -544,6 +793,7 @@
   let selected = null;
   function goTo(id) {
     const r = byId[id];
+    markDesk(null);
     if (selected) roomEls[selected].classList.remove('selected');
     selected = id; roomEls[id].classList.add('selected');
     walk(pointsTo(r.node, r));
@@ -556,92 +806,6 @@
     walk(pointsTo('lift', null));
     here = { room: null, node: 'lift' };
     renderOverview();
-  }
-
-  // ---- Paneel ----
-  const panel = document.getElementById('panel');
-  const eur = n => '€ ' + Math.round(n).toLocaleString('nl-NL');
-  function statusLabel(s) { return { vrij: 'Vrij', optie: 'Onder optie', verhuurd: 'Verhuurd', gedeeld: 'Gedeeld', algemeen: 'Algemene ruimte' }[s]; }
-  const rentable = rooms.filter(r => r.type === 'kantoor');
-  const available = rentable.filter(r => r.status === 'vrij' || r.status === 'optie');
-
-  let shortlist = [];
-  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist') || '[]').filter(id => byId[id]); } catch (e) { shortlist = []; }
-  function saveShortlist() { try { localStorage.setItem('plattegrond-shortlist', JSON.stringify(shortlist)); } catch (e) {} }
-
-  function renderSummary() {
-    const vrij = rentable.filter(r => r.status === 'vrij');
-    const m2 = vrij.reduce((s, r) => s + r.m2, 0), seats = vrij.reduce((s, r) => s + r.seats, 0);
-    document.getElementById('summary').innerHTML =
-      `<span><b>${vrij.length}</b> van ${rentable.length} kantoorruimtes vrij</span>` +
-      `<span><b>${m2} m²</b> direct of binnenkort beschikbaar</span>` +
-      `<span><b>${seats}</b> werkplekken</span>`;
-  }
-
-  function listRow(r) {
-    return `<button class="list-row" data-go="${r.id}">
-      <span class="c" style="color:var(--${r.status})">${r.id}</span>
-      <span><span class="n">${r.name}</span><br><span class="m">${r.m2} m² · ${r.seats} plekken · ${r.status === 'optie' ? 'onder optie' : 'vrij ' + (r.from === 'direct' ? 'direct' : 'per ' + r.from)}</span></span>
-      <span class="p">${eur(r.m2 * RENT)}<br><span class="m">p/mnd</span></span>
-    </button>`;
-  }
-
-  function renderOverview() {
-    const sl = shortlist.map(id => byId[id]);
-    panel.innerHTML = `
-      <div class="eyebrow">U staat bij de liften</div>
-      <h2>Welke ruimte wilt u bekijken?</h2>
-      <p>Klik op een ruimte in de plattegrond om erheen te lopen, of start de rondleiding langs alle ruimtes die vrij of onder optie zijn.</p>
-      <h3>Beschikbaar (${available.length})</h3>
-      <div class="list">${available.map(listRow).join('')}</div>
-      ${sl.length ? `<h3>Mijn shortlist <span class="shortlist-count">(${sl.length})</span></h3>
-        <div class="list">${sl.map(listRow).join('')}</div>
-        <p class="note">Samen ${sl.reduce((s, r) => s + r.m2, 0)} m², ${sl.reduce((s, r) => s + r.seats, 0)} werkplekken, ${eur(sl.reduce((s, r) => s + r.m2, 0) * RENT)} huur per maand.</p>` : ''}
-    `;
-    bindPanel();
-  }
-
-  function renderRoom(r) {
-    const isRent = r.type === 'kantoor';
-    const onList = shortlist.includes(r.id);
-    const t = tour.active ? `<div class="eyebrow">Rondleiding · stop ${tour.i + 1} van ${tour.list.length}</div>` : `<div class="eyebrow">${r.type === 'algemeen' ? 'Algemene ruimte' : r.id} · ${r.south ? 'zuidvleugel' : 'noordvleugel'}</div>`;
-    let stats = '';
-    if (isRent) {
-      stats = `<div class="stats">
-        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
-        <div class="stat"><span class="k">Werkplekken</span><span class="v">${r.seats}</span></div>
-        <div class="stat"><span class="k">Huur per maand</span><span class="v">${eur(r.m2 * RENT)}</span></div>
-        <div class="stat"><span class="k">Servicekosten</span><span class="v">${eur(r.m2 * SERVICE)}</span></div>
-        <div class="stat"><span class="k">Beschikbaar</span><span class="v">${r.status === 'verhuurd' ? '—' : (r.from === 'direct' ? 'Direct' : r.from)}</span></div>
-        <div class="stat"><span class="k">Lopen vanaf lift</span><span class="v">${distanceFromLift(r)} m</span></div>
-      </div>`;
-    } else if (r.seats) {
-      stats = `<div class="stats">
-        <div class="stat"><span class="k">Oppervlakte</span><span class="v">${r.m2} m²</span></div>
-        <div class="stat"><span class="k">Personen</span><span class="v">${r.seats}</span></div>
-      </div>`;
-    }
-    panel.innerHTML = `
-      ${t}
-      <h2>${r.name}</h2>
-      <span class="pill ${r.status}"><span class="dot" style="background:currentColor"></span>${statusLabel(r.status)}</span>
-      ${stats}
-      <p>${r.text}</p>
-      <div class="actions">
-        ${isRent && r.status !== 'verhuurd' ? `<button class="btn${onList ? ' ghost' : ''}" id="toggle-list">${onList ? 'Van shortlist halen' : 'Op mijn shortlist'}</button>` : ''}
-        <button class="btn ghost" id="back">Terug naar lift</button>
-      </div>
-    `;
-    const tl = document.getElementById('toggle-list');
-    if (tl) tl.addEventListener('click', () => {
-      shortlist = onList ? shortlist.filter(x => x !== r.id) : shortlist.concat(r.id);
-      saveShortlist(); renderRoom(r);
-    });
-    document.getElementById('back').addEventListener('click', () => { endTour(); goLift(); });
-  }
-
-  function bindPanel() {
-    panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.go)));
   }
 
   // ---- Filter ----
@@ -666,7 +830,7 @@
   function stopTourIfOutside(id) { if (tour.active && tour.list[tour.i] !== id) { const k = tour.list.indexOf(id); if (k >= 0) { tour.i = k; showStopBar(); } else endTour(); } }
   function showStopBar() { document.getElementById('tour-step').textContent = `Stop ${tour.i + 1} van ${tour.list.length} · ${byId[tour.list[tour.i]].name}`; document.getElementById('tour-prev').disabled = tour.i === 0; }
   document.getElementById('tour-start').addEventListener('click', () => {
-    tour.list = available.slice().sort((a, b) => order.indexOf(a.node) - order.indexOf(b.node)).map(r => r.id);
+    tour.list = [byId.BN, COWORK].concat(available).sort((a, b) => order.indexOf(a.node) - order.indexOf(b.node)).map(r => r.id);
     tour.i = 0; tour.active = true; tourbar.hidden = false; showStop();
   });
   document.getElementById('tour-prev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; showStop(); } });
