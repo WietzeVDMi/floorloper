@@ -13,7 +13,8 @@ De buitenkant is een nabootsing van The Pulse of Amsterdam op de Zuidas:
 - **Plint** van ca. 35 m met glazen pui (bioscoop en restaurant) en op het dak, tussen de torens, een **stadsbos** met een zwevend pad.
 - **Woontoren** (VMX, 21 verdiepingen, ca. 85 m) met oranje minerale strips, erkers en verspringende volumes.
 - De flexibele kantoren liggen op de **21e en 23e verdieping**; kies de verdieping met de knoppen bovenaan. Beide verdiepingen hebben dezelfde plattegrond met een eigen bezetting (voorbeeldgegevens). De U-vorm van de plattegrond geeft op de verdieping een loggia; de toren zelf is rechthoekig.
-- In de 3D-weergave toont de knop **Gebouw** het hele complex van buiten.
+- **Omgeving (gestileerd, bij benadering op de juiste plek)**: de A10 Ring Zuid op een talud met rijdend verkeer, station Amsterdam Zuid tussen de rijbanen met perrons, perronkappen, stationsingangen en rijdende NS-treinen en metro's, de Parnassusweg onder het viaduct, WTC Amsterdam ten noorden van het station, Mahler 4 met de ITO-toren en The Rock, Valley van MVRDV en overige Zuidas-torens.
+- In de 3D-weergave toont de knop **Gebouw** het hele complex van buiten, met labels bij de bekende gebouwen.
 
 ## Concept
 

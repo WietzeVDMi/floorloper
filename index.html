@@ -862,28 +862,176 @@
     scene.add(g);
   })();
 
-  // Straten en de Zuidas eromheen
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), M.ground);
-  ground.rotation.x = -Math.PI / 2; ground.position.set(0, FLOOR_Y, 22); ground.receiveShadow = true; scene.add(ground);
-  [[0, -14, 600, 14], [0, 60, 600, 14], [-66, 22, 14, 600], [66, 22, 14, 600]].forEach(([x, z, w, d]) => {
-    const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.road); r.rotation.x = -Math.PI / 2; r.position.set(x, FLOOR_Y + 0.02, z); r.receiveShadow = true; scene.add(r);
+  // ---------- Omgeving: A10, station Amsterdam Zuid en de Zuidas ----------
+  // Oost is +x, zuid is +z. The Pulse ligt ten zuiden van de A10, net ten westen van de Parnassusweg.
+  // De A10 en het spoor liggen op een talud; station Zuid ligt tussen de rijbanen.
+  const G = FLOOR_Y, E = 6;                                         // maaiveld en hoogte van het talud
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), M.ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.set(0, G, 22); ground.receiveShadow = true; scene.add(ground);
+  const addBox = (x0, x1, z0, z1, y0, h, m, parent = scene, cast = true) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, z1 - z0), m);
+    b.position.set((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2); b.castShadow = cast; b.receiveShadow = true; parent.add(b); return b;
+  };
+  const tiled = (base, tex, rx, ry) => { const m = base.clone(); m.map = tex.clone(); m.map.needsUpdate = true; m.map.repeat.set(rx, ry); return m; };
+  const texBox = (x0, x1, z0, z1, y0, h, base, tex, tile = 12) => addBox(x0, x1, z0, z1, y0, h, tiled(base, tex, Math.max(x1 - x0, z1 - z0) / tile, h / tile));
+  M.asphalt = mat(0x47494b, { roughness: .95 }); M.ballast = mat(0x6f6960, { roughness: 1 }); M.dike = mat(0x7f9468, { roughness: 1 });
+  M.platform = mat(0xbdb8b0, { roughness: .8 }); M.canopy = mat(0xf1f0ec, { roughness: .45, metalness: .2 }); M.rail = mat(0x8b8c8c, { metalness: .7, roughness: .35 });
+  M.screenGlass = new THREE.MeshStandardMaterial({ color: 0xc6d8dc, transparent: true, opacity: .25, roughness: .05, depthWrite: false });
+  const laneTex = canvasTex(256, (g, s) => {
+    g.fillStyle = '#47494b'; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(255,255,255,${rnd() * .05})`; g.fillRect(rnd() * s, rnd() * s, 2, 2); }
+    g.fillStyle = '#e8e6df'; g.fillRect(0, 6, s, 4); g.fillRect(0, s - 10, s, 4);
+    for (const y of [s * .25, s * .5, s * .75]) for (let x = 0; x < s; x += 64) g.fillRect(x, y - 2, 36, 4);
   });
-  (function zuidas() {
+  const sleeperTex = canvasTex(128, (g, s) => { g.fillStyle = '#6f6960'; g.fillRect(0, 0, s, s); for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * .2})`; g.fillRect(rnd() * s, rnd() * s, 3, 3); } g.fillStyle = '#5b5047'; for (let x = 0; x < s; x += 21) g.fillRect(x, 20, 8, s - 40); });
+
+  // Talud met de A10 en het spoor, met een opening voor de Parnassusweg
+  const DZ0 = -98, DZ1 = -14, PARN = [60, 80];
+  const dikeShape = new THREE.Shape([[DZ0 - 10, 0], [DZ1 + 10, 0], [DZ1, E], [DZ0, E]].map(([z, y]) => new THREE.Vector2(z, y)));
+  for (const [x0, x1] of [[-900, PARN[0]], [PARN[1], 900]]) {
+    const geo = new THREE.ExtrudeGeometry(dikeShape, { depth: x1 - x0, bevelEnabled: false });
+    const d = new THREE.Mesh(geo, M.dike); d.rotation.y = -Math.PI / 2; d.position.set(x0, G, 0); d.position.x = x1; d.receiveShadow = true; scene.add(d);
+  }
+  addBox(PARN[0] - 2, PARN[1] + 2, DZ0, DZ1, G + E - 1.2, 1.2, M.concrete);          // viaduct over de Parnassusweg
+  for (const z of [DZ0 + 8, -56, DZ1 - 8]) for (const x of [PARN[0] - 1, PARN[1] + 1]) addBox(x - 0.6, x + 0.6, z - 3, z + 3, G, E - 1.2, M.concrete);
+  // rijbanen (4 stroken per richting), spoor en perrons
+  const road = (z0, z1) => { const m = tiled(M.asphalt, laneTex, 1800 / 24, 1); const r = addBox(-900, 900, z0, z1, G + E, 0.05, m, scene, false); r.receiveShadow = true; };
+  road(-40, -20); road(-94, -74);
+  addBox(-900, 900, -74, -40, G + E, 0.12, tiled(M.ballast, sleeperTex, 1800 / 3, 1), scene, false);
+  const TRACKS = { trainE: -67, trainW: -60, metroE: -52, metroW: -45 };
+  Object.values(TRACKS).forEach(z => { for (const o of [-0.72, 0.72]) addBox(-900, 900, z + o - 0.04, z + o + 0.04, G + E + 0.12, 0.16, M.rail, scene, false); });
+  for (const [zc, w] of [[-63.5, 5], [-48.5, 5]]) addBox(80, 420, zc - w / 2, zc + w / 2, G + E, 1.0, M.platform);
+  // perronkappen met kolommen
+  (function canopies() {
+    const colGeo = new THREE.CylinderGeometry(0.18, 0.18, 4.6, 10), ms = [];
+    for (const zc of [-63.5, -48.5]) { addBox(84, 416, zc - 6, zc + 6, G + E + 5.4, 0.35, M.canopy); addBox(84, 416, zc - 0.4, zc + 0.4, G + E + 5.75, 0.5, M.canopy); for (let x = 90; x < 416; x += 14) ms.push(new THREE.Matrix4().makeTranslation(x, G + E + 3.3, zc)); }
+    const cols = new THREE.InstancedMesh(colGeo, M.steel, ms.length); ms.forEach((m, i) => cols.setMatrixAt(i, m)); cols.castShadow = true; scene.add(cols);
+  })();
+  // geluidsschermen langs de buitenranden
+  for (const z of [DZ0 + 0.5, DZ1 - 0.5]) { const s = addBox(-900, 900, z - 0.05, z + 0.05, G + E, 3.2, M.screenGlass, scene, false); s.renderOrder = 2; addBox(-900, 900, z - 0.1, z + 0.1, G + E + 3.2, 0.12, M.steel, scene, false); }
+  // stationsingangen aan het Zuidplein (noord) en aan de Mahlerkant (zuid), en de hal onder het spoor
+  for (const [z0, z1] of [[-122, -100], [-12, 4]]) {
+    addBox(210, 270, z0, z1, G, 7, mat(0x39454c, { roughness: .08, metalness: .8, envMapIntensity: 1.3 }));
+    addBox(205, 275, z0 - 3, z1 + 3, G + 7, 0.6, M.canopy);
+  }
+  addBox(200, 280, -76, -38, G + E + 9, 0.6, M.canopy);                             // grote kap boven de stationshal
+  for (const x of [200, 280]) for (const z of [-74, -56, -40]) addBox(x - .4, x + .4, z - .4, z + .4, G + E, 9, M.steel);
+  // Parnassusweg en straten op maaiveld
+  const street = (x0, x1, z0, z1) => { const s = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), M.road); s.rotation.x = -Math.PI / 2; s.position.set((x0 + x1) / 2, G + 0.03, (z0 + z1) / 2); s.receiveShadow = true; scene.add(s); };
+  street(PARN[0] + 1, PARN[1] - 1, -500, 600); street(-600, 900, -18, -8); street(-600, 900, 55, 67); street(-72, -60, -8, 600);
+  street(-600, 900, -118, -106); street(150, 162, 0, 600);
+
+  // WTC Amsterdam: torens rond een atrium ten noorden van het station
+  const winTex = canvasTex(256, (g, s) => { g.fillStyle = '#3d474e'; g.fillRect(0, 0, s, s); for (let y = 0; y < 16; y++) for (let x = 0; x < 8; x++) { const l = rnd(); g.fillStyle = l > .9 ? '#e8dcc2' : l > .5 ? '#6d7f8c' : '#56656f'; g.fillRect(x * 32 + 3, y * 16 + 2, 26, 11); } });
+  const graniteTex = canvasTex(256, (g, s) => { g.fillStyle = '#8b7f76'; g.fillRect(0, 0, s, s); for (let y = 0; y < 16; y++) for (let x = 0; x < 8; x++) { g.fillStyle = '#26303a'; g.fillRect(x * 32 + 8, y * 16 + 3, 16, 10); } });
+  const granite = mat(0xffffff, { roughness: .6 }), darkGlass = mat(0xffffff, { roughness: .12, metalness: .75, envMapIntensity: 1.2 });
+  texBox(150, 330, -205, -130, G, 20, granite, graniteTex);
+  [[152, 192, -203, -168, 96, granite, graniteTex], [288, 328, -203, -168, 92, granite, graniteTex], [152, 192, -168, -132, 62, darkGlass, winTex], [288, 328, -168, -132, 70, darkGlass, winTex], [210, 270, -205, -182, 105, darkGlass, winTex]]
+    .forEach(([x0, x1, z0, z1, h, m, t]) => { texBox(x0, x1, z0, z1, G, h, m, t); addBox(x0 - 1, x1 + 1, z0 - 1, z1 + 1, G + h, 1.2, M.champagneDark); });
+  addBox(194, 286, -180, -134, G + 20, 6, M.screenGlass, scene, false).renderOrder = 2;
+
+  // Mahler 4 met de ITO-toren (100 m, witte aluminium banden met glas en uitsparingen) en The Rock
+  const itoTex = canvasTex(256, (g, s) => { for (let y = 0; y < s; y += 32) { g.fillStyle = '#f2f2ef'; g.fillRect(0, y, s, 10); g.fillStyle = '#5f7482'; g.fillRect(0, y + 10, s, 22); } for (let x = 0; x < s; x += 32) { g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x, 0, 2, s); } });
+  const ito = [170, 206, 16, 36];
+  texBox(ito[0], ito[1], ito[2], ito[3], G, 100, mat(0xffffff, { roughness: .35, metalness: .3, envMapIntensity: 1 }), itoTex, 8);
+  [[170, 186, 16, 16.4, 40, 12], [190, 206, 35.6, 36, 62, 12], [205.6, 206, 20, 32, 78, 10], [170, 170.4, 22, 34, 22, 10]]
+    .forEach(([x0, x1, z0, z1, y, h]) => addBox(x0, x1, z0, z1, G + y, h, mat(0x14181b), scene, false));
+  const rockTex = canvasTex(256, (g, s) => { g.fillStyle = '#8a5a3c'; g.fillRect(0, 0, s, s); for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(${rnd() > .5 ? '40,25,15' : '200,160,120'},.25)`; g.beginPath(); g.moveTo(rnd() * s, rnd() * s); for (let k = 0; k < 4; k++) g.lineTo(rnd() * s, rnd() * s); g.fill(); } for (let y = 0; y < s; y += 16) { g.fillStyle = 'rgba(30,40,48,.7)'; g.fillRect(0, y + 4, s, 6); } });
+  texBox(240, 268, 70, 96, G, 82, mat(0xffffff, { roughness: .7 }), rockTex, 10);
+  [[215, 240, 18, 40, 72], [275, 310, 18, 44, 88], [220, 250, 105, 130, 54], [280, 318, 70, 100, 64]].forEach(([x0, x1, z0, z1, h]) => texBox(x0, x1, z0, z1, G, h, darkGlass, winTex));
+
+  // Valley (MVRDV): drie torens van 67, 81 en 100 m, getrapt en begroeid
+  (function valley() {
+    const stone = mat(0xb9ad9a, { roughness: .8 }), mirror = mat(0x9fb0ba, { roughness: .05, metalness: .95, envMapIntensity: 1.5 });
+    const plantGeo = new THREE.IcosahedronGeometry(1, 0), pm = [];
+    [[478, 28, 67], [512, 36, 81], [496, 66, 100]].forEach(([cx, cz, H]) => {
+      let y = G;
+      addBox(cx - 14, cx + 14, cz - 11, cz + 11, G, 10, stone);
+      y += 10;
+      while (y < G + H) {
+        const h = 3.5 + rnd() * 3.5, w = 16 + rnd() * 8, d = 12 + rnd() * 7, ox = (rnd() - .5) * 6, oz = (rnd() - .5) * 5;
+        addBox(cx + ox - w / 2, cx + ox + w / 2, cz + oz - d / 2, cz + oz + d / 2, y, h, rnd() > .35 ? stone : mirror);
+        for (let k = 0; k < 3; k++) pm.push(new THREE.Matrix4().compose(new THREE.Vector3(cx + ox + (rnd() - .5) * w, y + h + 0.5, cz + oz + (rnd() > .5 ? 1 : -1) * (d / 2 - 1)), new THREE.Quaternion(), new THREE.Vector3(1 + rnd(), 0.8 + rnd() * .6, 1 + rnd())));
+        y += h;
+      }
+    });
+    const plants = new THREE.InstancedMesh(plantGeo, M.leaf2, pm.length); pm.forEach((m, i) => plants.setMatrixAt(i, m)); plants.castShadow = true; scene.add(plants);
+  })();
+
+  // Overige Zuidas en de stad eromheen
+  const RESERVED = [[-80, 65, -25, 75], [-900, 900, -125, -5], [140, 340, -215, -110], [140, 330, 0, 135], [450, 560, 5, 95], [52, 88, -600, 600]];
+  (function city() {
     const glassy = [0x4d5f6c, 0x5d6a72, 0x3f4f5a].map(c => mat(c, { map: cityWin, roughness: .12, metalness: .8, envMapIntensity: 1.2 }));
-    const stone = [0xb9b2a6, 0xd0c8bb].map(c => mat(c, { map: cityWin, roughness: .8 }));
+    const stoneM = [0xb9b2a6, 0xd0c8bb, 0xa89c8c].map(c => mat(c, { map: cityWin, roughness: .8 }));
     const geo = new THREE.BoxGeometry(1, 1, 1), camA = Math.atan2(EXT_DIR[1], EXT_DIR[0]);
-    for (let i = 0; i < 80; i++) {
-      const a = rnd() * Math.PI * 2, d = 110 + rnd() * 320, w = 16 + rnd() * 24, dd = 16 + rnd() * 24;
-      const da = Math.abs(Math.atan2(Math.sin(a - camA), Math.cos(a - camA)));
-      if (da < 0.55 && d < 360) continue;                           // zichtlijn naar The Pulse vrijhouden
-      const h = d < 170 ? 20 + rnd() * 45 : d < 280 ? 35 + rnd() * 75 : 15 + rnd() * 50;
-      const x = Math.cos(a) * d, z = 22 + Math.sin(a) * d;
-      const base = (rnd() > .45 ? glassy : stone)[i % 2], m = base.clone();
+    let n = 0, tries = 0;
+    while (n < 110 && tries++ < 4000) {
+      const x = -650 + rnd() * 1300, z = -620 + rnd() * 1300, w = 16 + rnd() * 26, dd = 16 + rnd() * 26;
+      if (RESERVED.some(([a, b, c, d]) => x + w / 2 > a && x - w / 2 < b && z + dd / 2 > c && z - dd / 2 < d)) continue;
+      const a = Math.atan2(z - 22, x + 8), dist = Math.hypot(x + 8, z - 22);
+      if (Math.abs(Math.atan2(Math.sin(a - camA), Math.cos(a - camA))) < 0.55 && dist < 380) continue;
+      const zuidas = Math.abs(z + 55) < 260 && x > -300 && x < 700;
+      const h = zuidas ? 30 + rnd() * 70 : 12 + rnd() * 26;
+      const base = (zuidas && rnd() > .35 ? glassy : stoneM)[n % 3], m = base.clone();
       m.map = cityWin.clone(); m.map.needsUpdate = true; m.map.repeat.set(w / 12, h / 12);
-      const b = new THREE.Mesh(geo, m); b.scale.set(w, h, dd); b.position.set(x, FLOOR_Y + h / 2, z); b.rotation.y = Math.round(rnd()) * Math.PI / 2;
-      b.receiveShadow = true; scene.add(b);
+      const b = new THREE.Mesh(geo, m); b.scale.set(w, h, dd); b.position.set(x, G + h / 2, z); b.receiveShadow = true; b.castShadow = h > 40; scene.add(b); n++;
     }
   })();
+
+  // Verkeer op de A10 en de Parnassusweg, treinen en metro's bij station Zuid
+  const carGeo = mergeGeo([new THREE.BoxGeometry(4.4, 0.8, 1.85).translate(0, 0.6, 0), new THREE.BoxGeometry(2.4, 0.6, 1.7).translate(-0.2, 1.3, 0)]);
+  const CAR_COLORS = [0xf2f2f0, 0x1e2226, 0x8d9296, 0x2f4a6d, 0x7a2d29, 0xc9c3b6, 0x3c3f42, 0x5a6b4f];
+  const lanes = [];
+  [-37.5, -32.5, -27.5, -22.5].forEach((z, i) => lanes.push({ z, dir: 1, v: 22 + i * 2, y: G + E + 0.05 }));
+  [-76.5, -81.5, -86.5, -91.5].forEach((z, i) => lanes.push({ z, dir: -1, v: 28 - i * 2, y: G + E + 0.05 }));
+  const cars = [];
+  lanes.forEach(l => { for (let i = 0; i < 16; i++) cars.push({ l, x: -700 + rnd() * 1400, v: l.v * (0.9 + rnd() * .2) }); });
+  for (let i = 0; i < 10; i++) cars.push({ l: { z: 0, dir: 1, v: 12, y: G + 0.05, vertical: true, lx: 66 }, x: -500 + rnd() * 1000, v: 11 }, { l: { z: 0, dir: -1, v: 12, y: G + 0.05, vertical: true, lx: 74 }, x: -500 + rnd() * 1000, v: 11 });
+  const carMesh = new THREE.InstancedMesh(carGeo, mat(0xffffff, { roughness: .3, metalness: .6, envMapIntensity: 1 }), cars.length);
+  cars.forEach((c, i) => carMesh.setColorAt(i, new THREE.Color(CAR_COLORS[Math.floor(rnd() * CAR_COLORS.length)])));
+  carMesh.castShadow = true; scene.add(carMesh);
+  const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), yAxis = new THREE.Vector3(0, 1, 0), one = new THREE.Vector3(1, 1, 1), tmpP = new THREE.Vector3();
+  function trainTex(body, band, stripe) {
+    return canvasTex(256, (g, s) => { g.fillStyle = body; g.fillRect(0, 0, s, s); g.fillStyle = band; g.fillRect(0, s * .78, s, s * .22); g.fillStyle = '#1b2228'; for (let x = 8; x < s; x += 32) { g.fillRect(x, s * .18, 22, s * .2); g.fillRect(x, s * .48, 22, s * .2); } if (stripe) { g.fillStyle = stripe; g.fillRect(0, s * .42, s, 6); } });
+  }
+  const nsMat = mat(0xffffff, { map: trainTex('#f2c200', '#1d3b8b'), roughness: .45 });
+  const metroMat = mat(0xffffff, { map: trainTex('#e9ecee', '#5f6a72', '#d23b2f'), roughness: .4 });
+  function makeTrain(n, len, h, m) {
+    const g = new THREE.Group();
+    for (let i = 0; i < n; i++) { const c = new THREE.Mesh(RB(len, h, 2.9, 0.35), m); c.position.set(i * (len + 0.6), h / 2 + 0.5, 0); c.castShadow = true; g.add(c); }
+    scene.add(g); return g;
+  }
+  const trains = [
+    { g: makeTrain(6, 26, 4.6, nsMat), z: TRACKS.trainE, dir: 1, v: 26, stop: 240, dwell: 25, offset: 0 },
+    { g: makeTrain(6, 26, 4.6, nsMat), z: TRACKS.trainW, dir: -1, v: 26, stop: 240, dwell: 25, offset: 40 },
+    { g: makeTrain(3, 30, 3.5, metroMat), z: TRACKS.metroE, dir: 1, v: 18, stop: 250, dwell: 20, offset: 20 },
+    { g: makeTrain(3, 30, 3.5, metroMat), z: TRACKS.metroW, dir: -1, v: 18, stop: 250, dwell: 20, offset: 65 },
+  ];
+  function trainX(t, tr) {                                          // rijden, stoppen bij het station, doorrijden
+    const L = 900, run = (L + tr.stop) / tr.v, rest = (L - tr.stop) / tr.v, T = run + tr.dwell + rest + 20;
+    const p = (t + tr.offset) % T;
+    let s = p < run ? -L + tr.v * p : p < run + tr.dwell ? tr.stop : tr.stop + tr.v * (p - run - tr.dwell);
+    return tr.dir > 0 ? s : 480 - s;
+  }
+  function animateTraffic(dt, t) {
+    cars.forEach((c, i) => {
+      c.x += c.v * c.l.dir * dt;
+      if (c.x > 700) c.x -= 1400; if (c.x < -700) c.x += 1400;
+      if (c.l.vertical) { tmpP.set(c.l.lx, c.l.y, c.x); tmpQ.setFromAxisAngle(yAxis, c.l.dir > 0 ? -Math.PI / 2 : Math.PI / 2); }
+      else { tmpP.set(c.x, c.l.y, c.l.z); tmpQ.setFromAxisAngle(yAxis, c.l.dir > 0 ? 0 : Math.PI); }
+      carMesh.setMatrixAt(i, tmpM.compose(tmpP, tmpQ, one));
+    });
+    carMesh.instanceMatrix.needsUpdate = true;
+    trains.forEach(tr => { const x = trainX(t, tr); tr.g.position.set(tr.dir > 0 ? x - 6 * 27 : x, G + E + 0.1, tr.z); });
+  }
+  const LANDMARKS = [
+    ['Station Amsterdam Zuid', 'Trein en metro', 240, G + E + 20, -56],
+    ['A10 Ring Zuid', 'Snelweg', -200, G + E + 10, -56],
+    ['WTC Amsterdam', 'Kantoren', 240, G + 115, -170],
+    ['ITO-toren', 'Mahler 4', 188, G + 110, 26],
+    ['Valley', 'MVRDV', 496, G + 110, 50],
+    ['Woontoren', 'The Pulse', -38, G + 95, 22],
+  ];
 
   // ---------- Vloer, binnentuin en plafond ----------
   const shape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x * U, -y * U)));
@@ -1463,10 +1611,15 @@
     });
     const vrij = rentable.filter(r => r.status === 'vrij').length;
     towerLabel = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture('21e en 23e verdieping', `Flexibele kantoren · nu op de ${CUR_FLOOR}e`, '#7a2d29'), depthTest: false, transparent: true }));
+    LANDMARKS.forEach(([t, sub, x, y, zz]) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(t, sub, '#4c5a5e'), depthTest: false, transparent: true }));
+      sp.scale.set(30, 10.3, 1); sp.position.set(x, y, zz); sp.renderOrder = 6; scene.add(sp); landmarkLabels.push(sp);
+    });
     towerLabel.scale.set(20, 6.8, 1); towerLabel.position.set(20, ((FLOORS[0] + FLOORS[1]) / 2 - OUR) * FH - 9, 50); towerLabel.renderOrder = 6; scene.add(towerLabel);
     applyModeVisibility();
   }
   let towerLabel = null;
+  const landmarkLabels = [];
 
   // Bezoeker (zichtbaar van boven)
   const figure = new THREE.Group();
@@ -1521,6 +1674,7 @@
     figure.visible = mode === 'over';
     aboveGroup.visible = mode !== 'over';
     if (towerLabel) towerLabel.visible = mode === 'ext';
+    landmarkLabels.forEach(l => l.visible = mode === 'ext');
     refreshOverlays();
   }
   function setMode(m) {
@@ -1736,6 +1890,7 @@
   let lastPlace = '', lastRoom = null, last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    animateTraffic(dt, now / 1000);
 
     // handmatig lopen
     if (mode === 'walk' && !camTween) {
