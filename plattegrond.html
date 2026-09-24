@@ -202,7 +202,7 @@
 <div class="wrap">
   <header>
     <div>
-      <div class="eyebrow">Flexibele kantoorverdieping · 12e van 24 verdiepingen · alles all-in</div>
+      <div class="eyebrow" id="eyebrow">Flexibele kantoren · 21e verdieping van 24 · alles all-in</div>
       <h1>Loop door de verdieping</h1>
     </div>
     <div class="summary" id="summary"></div>
@@ -212,6 +212,10 @@
   <div class="layout">
     <section class="plan-card" aria-label="Plattegrond">
       <div class="toolbar">
+        <div class="chips" role="group" aria-label="Verdieping">
+          <button class="chip" data-floor="21" aria-pressed="true">21e verdieping</button>
+          <button class="chip" data-floor="23" aria-pressed="false">23e verdieping</button>
+        </div>
         <div class="chips" role="group" aria-label="Filter op beschikbaarheid">
           <button class="chip" id="f-alle" data-filter="alle" aria-pressed="true">Alle ruimtes</button>
           <button class="chip" id="f-vrij" data-filter="vrij" aria-pressed="false"><span class="dot" style="background:var(--vrij)"></span>Vrij</button>
@@ -311,6 +315,23 @@
     y: H - r.y - r.h, door: [r.door[0], H - r.door[1]], node: mirrorNode(r.node), south: true,
   }, southOverride[r.id]));
 
+  // Co-Office huurt de 21e en de 23e verdieping: dezelfde plattegrond, andere bezetting (voorbeeldgegevens)
+  const FLOORS = [21, 23];
+  let CUR_FLOOR = 21;
+  try { const h = (location.hash || '').match(/^#v(\d+)$/), st = sessionStorage.getItem('plattegrond-verdieping'); CUR_FLOOR = h ? +h[1] : st ? +st : 21; } catch (e) {}
+  if (!FLOORS.includes(CUR_FLOOR)) CUR_FLOOR = 21;
+  const FLOOR_STATUS = { 23: { A3: ['verhuurd'], A4: ['vrij', 'direct'], A6: ['optie', '1 dec 2026'], B1: ['verhuurd'], B2: ['verhuurd'], B3: ['vrij', '1 nov 2026'], B4: ['optie', '1 jan 2027'], B6: ['vrij', 'direct'] } };
+  north.concat(south).forEach(r => { const o = (FLOOR_STATUS[CUR_FLOOR] || {})[r.id]; if (o) { r.status = o[0]; r.from = o[1]; } });
+  document.querySelectorAll('[data-floor]').forEach(b => {
+    b.setAttribute('aria-pressed', String(+b.dataset.floor === CUR_FLOOR));
+    b.addEventListener('click', () => {
+      const f = +b.dataset.floor; if (f === CUR_FLOOR) return;
+      try { sessionStorage.setItem('plattegrond-verdieping', String(f)); } catch (e) {}
+      location.hash = 'v' + f; location.reload();
+    });
+  });
+  const eyebrowEl = document.getElementById('eyebrow');
+  if (eyebrowEl) eyebrowEl.textContent = `Flexibele kantoren · ${CUR_FLOOR}e verdieping van 24 · alles all-in`;
   const rooms = north.concat(south).map(r => {
     const status = r.type === 'kantoor' ? r.status : r.type === 'cowork' ? 'vrij' : r.type;
     const m2 = Math.round(r.w * r.h * M2_PER_UNIT);
@@ -323,7 +344,7 @@
   const PRICE = { perSeat: 375, flex: 199, vast: 299, meeting: 35, virtualPost: 99, virtualFlex: 299 };
   const CONTRACT = 'Vanaf 3 maanden, daarna maandelijks opzegbaar';
   const INCLUDED = ['Servicekosten en energie', 'Snel internet', 'Koffie, thee en fruit', 'Schoonmaak', 'Host en receptie', 'Lounge, lunch en events', 'Volledig ingericht'];
-  const VAST_BEZET = [1, 2, 4, 7, 9, 10];
+  const VAST_BEZET = CUR_FLOOR === 23 ? [0, 1, 3, 5, 6, 8, 9, 11] : [1, 2, 4, 7, 9, 10];
   const COWORK = rooms.find(r => r.type === 'cowork');
   const desks = Array.from({ length: 24 }, (_, i) => ({
     i, id: `${COWORK.id}-${String(i + 1).padStart(2, '0')}`,
@@ -350,8 +371,8 @@
   let shownRoom = null;
 
   let shortlist = [];
-  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist') || '[]').filter(id => (byId[id] && byId[id].type === 'kantoor') || deskById[id]); } catch (e) { shortlist = []; }
-  const saveShortlist = () => { try { localStorage.setItem('plattegrond-shortlist', JSON.stringify(shortlist)); } catch (e) {} };
+  try { shortlist = JSON.parse(localStorage.getItem('plattegrond-shortlist-' + CUR_FLOOR) || '[]').filter(id => (byId[id] && byId[id].type === 'kantoor') || deskById[id]); } catch (e) { shortlist = []; }
+  const saveShortlist = () => { try { localStorage.setItem('plattegrond-shortlist-' + CUR_FLOOR, JSON.stringify(shortlist)); } catch (e) {} };
   const itemOf = id => deskById[id]
     ? { id, name: 'Vaste werkplek ' + id, seats: 1, price: PRICE.vast, go: COWORK.id }
     : { id, name: byId[id].name, seats: byId[id].seats, price: allIn(byId[id]), go: id };
